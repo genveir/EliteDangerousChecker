@@ -33,8 +33,8 @@ public class TestController : ControllerBase
 
             combinedPrices.Add(new(p1.Station,
                 [
-                    new(p1.Commodity, p1.Price, p1.HoursSinceLastUpdate),
-                    new(matchIn2.Commodity, matchIn2.Price, matchIn2.HoursSinceLastUpdate)
+                    new(p1.Commodity.ToString(), p1.Price, p1.HoursSinceLastUpdate),
+                    new(matchIn2.Commodity.ToString(), matchIn2.Price, matchIn2.HoursSinceLastUpdate)
                 ]));
         }
 
@@ -43,5 +43,5 @@ public class TestController : ControllerBase
 
     private record CombinedPriceModel(Station Station, CommodityPrice[] CommodityPrices);
 
-    private record CommodityPrice(Commodity Commodity, int Price, int AgeInHours);
+    private record CommodityPrice(string CommodityName, int Price, int AgeInHours);
 }

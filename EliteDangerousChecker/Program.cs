@@ -1,4 +1,5 @@
 using EliteDangerousChecker.Core;
+using EliteDangerousChecker.Database;
 using EliteDangerousChecker.InaraScraper;
 
 namespace EliteDangerousChecker.Api
@@ -15,6 +16,7 @@ namespace EliteDangerousChecker.Api
             builder.Services
                 .AddHttpClient()
                 .AddCore()
+                .AddDatabase()
                 .AddInaraScraper();
 
             var app = builder.Build();
