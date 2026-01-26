@@ -1,3 +1,6 @@
+using EliteDangerousChecker.Core;
+using EliteDangerousChecker.InaraScraper;
+
 namespace EliteDangerousChecker.Api
 {
     public class Program
@@ -9,7 +12,10 @@ namespace EliteDangerousChecker.Api
             // Add services to the container.
 
             builder.Services.AddControllers();
-            builder.Services.AddHttpClient();
+            builder.Services
+                .AddHttpClient()
+                .AddCore()
+                .AddInaraScraper();
 
             var app = builder.Build();
 
