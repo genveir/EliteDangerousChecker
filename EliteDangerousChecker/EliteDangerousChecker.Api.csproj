@@ -10,7 +10,6 @@
     <ProjectReference Include="..\EliteDangerousChecker.ArdentApi\EliteDangerousChecker.ArdentApi.csproj" />
     <ProjectReference Include="..\EliteDangerousChecker.Core\EliteDangerousChecker.Core.csproj" />
     <ProjectReference Include="..\EliteDangerousChecker.Database\EliteDangerousChecker.Database.csproj" />
-    <ProjectReference Include="..\EliteDangerousChecker.InaraScraper\EliteDangerousChecker.InaraScraper.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,5 @@
 ﻿using EliteDangerousChecker.Core.Entities.Galaxy;
 using EliteDangerousChecker.Core.Entities.Market;
-using EliteDangerousChecker.Core.Plugins;
 
 namespace EliteDangerousChecker.Core.Operations;
 
@@ -11,15 +10,15 @@ public interface IGetPricePoints
 
 public class GetPricePoints : IGetPricePoints
 {
-    private readonly IInaraClient inaraClient;
 
-    public GetPricePoints(IInaraClient inaraClient)
+    public GetPricePoints()
     {
-        this.inaraClient = inaraClient;
     }
 
     public async Task<PricePoint[]> Execute(Commodity commodity, SolarSystem searchFrom)
     {
-        return await inaraClient.GetSellingPrices(commodity, searchFrom);
+        await Task.CompletedTask;
+
+        return [];
     }
 }

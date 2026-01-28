@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EliteDangerousChecker.Database.Update;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EliteDangerousChecker.Database;
 

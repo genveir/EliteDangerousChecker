@@ -1,0 +1,28 @@
+﻿namespace EliteDangerousChecker.Database.Update.ImmediateWrite;
+public record Government(long Id, string Name) : IIdAndNameTableEntity { }
+
+public static class GovernmentAccess
+{
+    private static Dictionary<string, long>? Items { get; set; }
+
+    public static async Task<long?> GetId(string? name) => await IdAndNameTableAccess.GetId(
+        name,
+        getItemsTask: GetItems,
+        refreshItemsTask: RefreshItems,
+        addItemTask: AddItem);
+
+    private static async Task<Dictionary<string, long>> GetItems()
+    {
+        if (Items == null)
+            await RefreshItems();
+
+        return Items!;
+    }
+
+    private static async Task RefreshItems()
+    {
+        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "Government");
+    }
+
+    private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<Government>(tableName: "Government", id, value);
+}

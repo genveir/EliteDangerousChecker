@@ -1,4 +1,4 @@
-﻿using EliteDangerousChecker.Database;
+﻿using EliteDangerousChecker.Database.Update;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -13,47 +13,76 @@ public class UpdateController : ControllerBase
         this.jsonReaderFactory = jsonReaderFactory;
     }
 
-    [HttpGet("api/update/test/{toProcess}")]
-    public async Task<IActionResult> Get(int toProcess)
-    {
-        using var jsonReader = jsonReaderFactory.CreateJsonReader(
-            fileName: @"e:\temp\galaxy.json",
-            errorFileName: @"d:\temp\errors.jsonx",
-            unmappedFileName: @"d:\temp\unmapped.jsonx");
+    [HttpGet("api/update/test/{batchToProcess}")]
+    public async Task<IActionResult> ProcessSingle(int batchToProcess) =>
+        await ProcessNumber(batchToProcess, batchToProcess);
 
+    [HttpGet("api/update/test/{firstBatchToProcess}/{lastBatchToProcess}")]
+    public async Task<IActionResult> ProcessNumber(int firstBatchToProcess, int lastBatchToProcess)
+    {
         Dictionary<string, List<string>> results = [];
-        results.Add("progress", new List<string>());
-        results.Add("unmappedSystems", new List<string>());
-        results.Add("systemsWithErrors", new List<string>());
-        results.Add("processedSystems", new List<string>());
+        results.Add("progress", []);
+        results.Add("unmappedSystems", []);
+        results.Add("systemsWithErrors", []);
 
         var stopWatch = new System.Diagnostics.Stopwatch();
 
         stopWatch.Start();
-        for (int n = 0; n < toProcess; n++)
+
+        for (int batchToProcess = firstBatchToProcess; batchToProcess <= lastBatchToProcess; batchToProcess++)
         {
-            var result = await jsonReader.ReadSystem();
+            Console.WriteLine($"starting batch {batchToProcess}, last is {lastBatchToProcess}");
 
-            if (result.Errored)
-            {
-                results["systemsWithErrors"]!.Add($"System {n} errored");
-                continue;
-            }
-            if (result.WasUnmappable.Any())
-            {
-                var unmapped = JsonSerializer.Serialize(result.WasUnmappable);
-
-                results["unmappedSystems"]!.Add($"System {n} had unmapped fields: {unmapped}");
-                continue;
-            }
-            results["processedSystems"]!.Add($"System {result.System.Name} processed");
+            results["progress"]!.Add($"processed batch {batchToProcess}");
+            await ReadJson(results, batchToProcess);
         }
+
         stopWatch.Stop();
 
-        var progress = jsonReader.GetProgressPercentage();
-        results["progress"].Add($"parsed {toProcess} records, which was {progress} percent of the whole");
         results["progress"].Add($"time taken: {stopWatch.ElapsedMilliseconds / 1000} s");
 
         return Ok(results);
+    }
+
+    private async Task ReadJson(Dictionary<string, List<string>> results, int batchToProcess)
+    {
+        using var jsonReader = jsonReaderFactory.CreateJsonReader(
+            fileName: @$"e:\temp\elite\batch_{batchToProcess}.json",
+            errorFileName: @$"d:\temp\elite\errors_{batchToProcess}.jsonx",
+            unmappedFileName: @$"d:\temp\elite\unmapped_{batchToProcess}.jsonx");
+
+        var bulkWriter = new BulkWriter();
+        await bulkWriter.Initialize();
+
+        int recordIndex = 0;
+
+        while (jsonReader.HasMore())
+        {
+            var result = await jsonReader.ReadSystem();
+
+            if (result.Errored != null)
+            {
+                results["systemsWithErrors"]!.Add($"System {recordIndex} errored: {result.Errored}");
+                continue;
+            }
+            if (result.WasUnmappable.Length != 0)
+            {
+                var unmapped = JsonSerializer.Serialize(result.WasUnmappable);
+
+                results["unmappedSystems"]!.Add($"System {recordIndex} had unmapped fields: {unmapped}");
+                continue;
+            }
+
+            recordIndex++;
+
+            await bulkWriter.AddSystem(result.System);
+
+            if (bulkWriter.RowCount > 100000)
+            {
+                await bulkWriter.WriteSolarSystems();
+            }
+        }
+
+        await bulkWriter.WriteSolarSystems();
     }
 }
