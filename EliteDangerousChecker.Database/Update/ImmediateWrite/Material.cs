@@ -9,7 +9,6 @@ public static class MaterialAccess
     public static async Task<long?> GetId(string? name) => await IdAndNameTableAccess.GetId(
         name,
         getItemsTask: GetItems,
-        refreshItemsTask: RefreshItems,
         addItemTask: AddItem);
 
     private static async Task<Dictionary<string, long>> GetItems()

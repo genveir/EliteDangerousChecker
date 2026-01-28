@@ -8,7 +8,6 @@ internal static class IdAndNameTableAccess
     public static async Task<long?> GetId(
         string? name,
         Func<Task<Dictionary<string, long>>> getItemsTask,
-        Func<Task> refreshItemsTask,
         Func<long, string, Task> addItemTask)
     {
         if (name == null)
@@ -18,11 +17,6 @@ internal static class IdAndNameTableAccess
 
         if (!items.TryGetValue(name, out long _))
         {
-            await refreshItemsTask();
-
-            items = await getItemsTask();
-
-            if (!items.TryGetValue(name, out long _))
             {
                 long newId = items.Count == 0
                 ? 1
