@@ -9,6 +9,8 @@ public class BulkWriter
 {
     DataTable SolarSystems { get; set; }
 
+    DataTable SectorPrefixes { get; set; }
+
     DataTable Factions { get; set; }
     long nextFactionId { get; set; }
     Dictionary<string, long> FactionNameToId = new();
@@ -25,21 +27,24 @@ public class BulkWriter
     public int RowCount => SolarSystems.Rows.Count;
     public bool Writing = false;
 
+#pragma warning disable CS8618
     public BulkWriter()
     {
         Reset();
     }
+#pragma warning restore
 
     private void Reset()
     {
-        SolarSystems = SetupSolarSystemDataTable();
-        Factions = SetupFactionDataTable();
-        SolarSystemFactions = SetupSolarSystemFactionDataTable();
-        Bodies = SetupBodiesDataTable();
-        Stations = SetupStationsDataTable();
-        StationEconomies = SetupStationEconomiesDataTable();
-        StationServices = SetupStationServicesDataTable();
-        StationsMappedToPlaceholderFaction = SetupStationsMappedToPlaceholderFactionDataTable();
+        SolarSystems = DataTables.SetupSolarSystemDataTable();
+        SectorPrefixes = DataTables.SetupSectorPrefixDataTable();
+        Factions = DataTables.SetupFactionDataTable();
+        SolarSystemFactions = DataTables.SetupSolarSystemFactionDataTable();
+        Bodies = DataTables.SetupBodiesDataTable();
+        Stations = DataTables.SetupStationsDataTable();
+        StationEconomies = DataTables.SetupStationEconomiesDataTable();
+        StationServices = DataTables.SetupStationServicesDataTable();
+        StationsMappedToPlaceholderFaction = DataTables.SetupStationsMappedToPlaceholderFactionDataTable();
     }
 
     public async Task Initialize()
@@ -104,13 +109,17 @@ public class BulkWriter
             }
         }
 
-        await AddSolarSystemToDataTable(solarSystem);
+        var (prefixWords, suffix, postfix) = ParseName(solarSystem);
+
+        await AddSolarSystemToDataTable(solarSystem, suffix, postfix);
+
+        await AddSectorPrefixToDataTable(solarSystem, prefixWords);
 
         if (solarSystem.Bodies != null)
         {
             foreach (var body in solarSystem.Bodies)
             {
-                await AddBody(body, solarSystem.Id64);
+                await AddBody(body, solarSystem);
             }
         }
 
@@ -123,27 +132,49 @@ public class BulkWriter
         }
     }
 
-    private async Task AddBody(Body body, long solarSystemId)
+    private (string[] prefixWords, string? suffix, string? postfix) ParseName(SolarSystem solarSystem)
     {
-        await AddBodyToDataTable(body, solarSystemId);
+        if (solarSystem.Name == null)
+        {
+            return (Array.Empty<string>(), null, null);
+        }
+
+        var nameParts = solarSystem.Name.Split(' ');
+        if (nameParts.Length >= 3)
+        {
+            var suffix = nameParts[^2];
+            var postfix = nameParts[^1];
+            if (suffix.Length == 4 && suffix[2] == '-' &&
+                postfix.Length <= 5 && postfix[1] >= '0' && postfix[1] <= '9')
+            {
+                return (nameParts[..^2], suffix, postfix);
+            }
+        }
+        return (nameParts, null, null);
+    }
+
+    private async Task AddBody(Body body, SolarSystem solarSystem)
+    {
+        await AddBodyToDataTable(body, solarSystem);
 
         if (body.Stations != null)
         {
             foreach (var station in body.Stations)
             {
-                await AddStationToDataTable(station, body);
+                await AddStationToDataTable(station, solarSystem, body);
                 await AddStationEconomies(station);
                 await AddStationServices(station);
             }
         }
     }
 
-    SemaphoreSlim solarSystemMutex = new SemaphoreSlim(1, 1);
-    private async Task AddSolarSystemToDataTable(SolarSystem solarSystem)
+    private async Task AddSolarSystemToDataTable(SolarSystem solarSystem, string? suffix, string? postfix)
     {
+        long? suffixId = suffix != null ? await SectorSuffixAccess.GetId(suffix) : null;
+        long? postfixId = postfix != null ? await SectorPostfixAccess.GetId(postfix) : null;
+
         var row = SolarSystems.NewRow();
         row["Id"] = solarSystem.Id64;
-        row["Name"] = ValueOrDbNull(solarSystem.Name);
         row["X"] = ValueOrDbNull(solarSystem.Coordinates?.X);
         row["Y"] = ValueOrDbNull(solarSystem.Coordinates?.Y);
         row["Z"] = ValueOrDbNull(solarSystem.Coordinates?.Z);
@@ -164,15 +195,78 @@ public class BulkWriter
         row["PowerStateControlProgress"] = ValueOrDbNull(solarSystem.PowerStateControlProgress ?? 0);
         row["PowerStateReinforcement"] = ValueOrDbNull(solarSystem.PowerStateReinforcement ?? 0);
         row["PowerStateUndermining"] = ValueOrDbNull(solarSystem.PowerStateUndermining ?? 0);
+        row["SectorSuffixId"] = ValueOrDbNull(suffixId);
+        row["SectorPostfixId"] = ValueOrDbNull(postfixId);
+
         SolarSystems.Rows.Add(row);
     }
 
-    private async Task AddBodyToDataTable(Body body, long solarSystemId)
+    private async Task AddSectorPrefixToDataTable(SolarSystem solarSystem, string[] prefixes)
     {
+        int sequence = 0;
+
+        for (int n = 0; n < prefixes.Length; n++)
+        {
+            var prefix = prefixes[n];
+
+            if (prefix.Contains('-'))
+            {
+                var split = prefix.Split('-');
+
+                await AddSectorPrefixToDataTable(solarSystem, split[0], sequence++, startWithDash: false);
+                for (int i = 1; i < split.Length; i++)
+                {
+                    await AddSectorPrefixToDataTable(solarSystem, split[i], sequence++, startWithDash: true);
+                }
+            }
+            else
+            {
+                await AddSectorPrefixToDataTable(solarSystem, prefix, sequence++, startWithDash: false);
+            }
+        }
+    }
+
+    private async Task AddSectorPrefixToDataTable(SolarSystem solarSystem, string prefix, int sequence, bool startWithDash)
+    {
+        bool startWithJ = false;
+        bool isNumber = false;
+        int prefixNumeric = 0;
+
+        if (prefix.StartsWith('J') && prefix.Length > 1)
+        {
+            isNumber = int.TryParse(prefix[1..], out prefixNumeric);
+            startWithJ = isNumber;
+        }
+
+        if (!startWithJ)
+        {
+            isNumber = int.TryParse(prefix, out prefixNumeric);
+        }
+
+        var row = SectorPrefixes.NewRow();
+        row["SolarSystemId"] = solarSystem.Id64;
+        row["Sequence"] = sequence;
+        row["SectorPrefixWordId"] = ValueOrDbNull(isNumber ? null : await SectorPrefixWordAccess.GetId(prefix));
+        row["SectorPrefixNumber"] = ValueOrDbNull(isNumber ? prefixNumeric : (int?)null);
+        row["StartWithDash"] = startWithDash;
+        row["StartWithJ"] = startWithJ;
+        SectorPrefixes.Rows.Add(row);
+    }
+
+    private async Task AddBodyToDataTable(Body body, SolarSystem solarSystem)
+    {
+        var hasPrefix = body.Name != null && body.Name.StartsWith(solarSystem.Name!);
+
+        string? bodyName = body.Name;
+        if (hasPrefix)
+        {
+            bodyName = body.Name!.Substring(solarSystem.Name!.Length).Trim();
+        }
+
         var row = Bodies.NewRow();
         row["Id"] = body.Id64;
         row["BodyId"] = body.BodyId;
-        row["Name"] = ValueOrDbNull(body.Name);
+        row["Name"] = ValueOrDbNull(bodyName);
         row["BodyTypeId"] = ValueOrDbNull(await BodyTypeAccess.GetId(body.Type));
         row["BodySubTypeId"] = ValueOrDbNull(await BodySubTypeAccess.GetId(body.SubType));
         row["DistanceToArrival"] = ValueOrDbNull(body.DistanceToArrival);
@@ -206,7 +300,8 @@ public class BulkWriter
         row["DistanceToArrivalTimestamp"] = ValueOrDbNull(body.Timestamps?.DistanceToArrival);
         row["MeanAnomalyTimestamp"] = ValueOrDbNull(body.Timestamps?.MeanAnomaly);
         row["AscendingNodeTimestamp"] = ValueOrDbNull(body.Timestamps?.AscendingNode);
-        row["SolarSystemId"] = solarSystemId;
+        row["SolarSystemId"] = solarSystem.Id64;
+        row["SolarSystemNameIsPrefix"] = hasPrefix;
         Bodies.Rows.Add(row);
     }
 
@@ -218,11 +313,12 @@ public class BulkWriter
         Stations.Rows.Add(row);
     }
 
-    private async Task AddStationToDataTable(Station station, Body body)
+    private async Task AddStationToDataTable(Station station, SolarSystem solarSystem, Body body)
     {
         var row = Stations.NewRow();
         await FillStationRows(station, row);
         row["bodyId"] = body.Id64;
+        row["solarSystemId"] = solarSystem.Id64;
         Stations.Rows.Add(row);
     }
 
@@ -352,6 +448,9 @@ public class BulkWriter
             bulkCopy.DestinationTableName = "SolarSystem";
             await bulkCopy.WriteToServerAsync(SolarSystems);
 
+            bulkCopy.DestinationTableName = "SectorPrefix";
+            await bulkCopy.WriteToServerAsync(SectorPrefixes);
+
             bulkCopy.DestinationTableName = "SolarSystemFaction";
             await bulkCopy.WriteToServerAsync(SolarSystemFactions);
 
@@ -378,154 +477,5 @@ public class BulkWriter
 
             throw;
         }
-    }
-
-    private DataTable SetupSolarSystemDataTable()
-    {
-        var table = new DataTable();
-        table.Columns.Add("Id", typeof(long));
-        table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("X", typeof(int));
-        table.Columns.Add("Y", typeof(int));
-        table.Columns.Add("Z", typeof(int));
-        table.Columns.Add("AllegianceId", typeof(long));
-        table.Columns.Add("GovernmentId", typeof(long));
-        table.Columns.Add("PrimaryEconomyId", typeof(long));
-        table.Columns.Add("SecondaryEconomyId", typeof(long));
-        table.Columns.Add("SecurityId", typeof(long));
-        table.Columns.Add("Population", typeof(long));
-        table.Columns.Add("BodyCount", typeof(int));
-        table.Columns.Add("ControllingFactionId", typeof(long));
-        table.Columns.Add("Date", typeof(string));
-        table.Columns.Add("PowerStateTimestamp", typeof(string));
-        table.Columns.Add("PowersTimestamp", typeof(string));
-        table.Columns.Add("ControllingPowerTimestamp", typeof(string));
-        table.Columns.Add("ControllingPowerId", typeof(long));
-        table.Columns.Add("PowerStateId", typeof(long));
-        table.Columns.Add("PowerStateControlProgress", typeof(double));
-        table.Columns.Add("PowerStateReinforcement", typeof(double));
-        table.Columns.Add("PowerStateUndermining", typeof(double));
-
-        return table;
-    }
-
-    private DataTable SetupFactionDataTable()
-    {
-        var table = new DataTable();
-        table.Columns.Add("Id", typeof(long));
-        table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("Allegiance", typeof(string));
-        table.Columns.Add("Government", typeof(string));
-
-        return table;
-    }
-
-    private DataTable SetupSolarSystemFactionDataTable()
-    {
-        var table = new DataTable();
-        table.Columns.Add("SolarSystemId", typeof(long));
-        table.Columns.Add("FactionId", typeof(long));
-        table.Columns.Add("Influence", typeof(double));
-        table.Columns.Add("FactionStateId", typeof(long));
-
-        return table;
-    }
-
-    private DataTable SetupBodiesDataTable()
-    {
-        var table = new DataTable();
-        table.Columns.Add("Id", typeof(long));
-        table.Columns.Add("BodyId", typeof(long));
-        table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("BodyTypeId", typeof(long));
-        table.Columns.Add("BodySubTypeId", typeof(long));
-        table.Columns.Add("DistanceToArrival", typeof(double));
-        table.Columns.Add("Mainstar", typeof(bool));
-        table.Columns.Add("Age", typeof(int));
-        table.Columns.Add("SpectralClassId", typeof(long));
-        table.Columns.Add("LuminosityId", typeof(long));
-        table.Columns.Add("AbsoluteMagnitude", typeof(double));
-        table.Columns.Add("SolarMasses", typeof(double));
-        table.Columns.Add("SurfaceTemperature", typeof(double));
-        table.Columns.Add("RotationalPeriod", typeof(double));
-        table.Columns.Add("RotationalPeriodTidallyLocked", typeof(bool));
-        table.Columns.Add("AxialTilt", typeof(double));
-        table.Columns.Add("OrbitalPeriod", typeof(double));
-        table.Columns.Add("SemiMajorAxis", typeof(double));
-        table.Columns.Add("OrbitalEccentricity", typeof(double));
-        table.Columns.Add("OrbitalInclination", typeof(double));
-        table.Columns.Add("ArgOfPeriapsis", typeof(double));
-        table.Columns.Add("MeanAnomaly", typeof(double));
-        table.Columns.Add("AscendingNode", typeof(double));
-        table.Columns.Add("IsLandable", typeof(bool));
-        table.Columns.Add("Gravity", typeof(double));
-        table.Columns.Add("EarthMasses", typeof(double));
-        table.Columns.Add("Radius", typeof(double));
-        table.Columns.Add("SurfacePressure", typeof(double));
-        table.Columns.Add("VolcanismTypeId", typeof(long));
-        table.Columns.Add("AtmosphereTypeId", typeof(long));
-        table.Columns.Add("TerraformingStateId", typeof(long));
-        table.Columns.Add("ReserveLevelId", typeof(long));
-        table.Columns.Add("UpdateTime", typeof(string));
-        table.Columns.Add("DistanceToArrivalTimestamp", typeof(string));
-        table.Columns.Add("MeanAnomalyTimestamp", typeof(string));
-        table.Columns.Add("AscendingNodeTimestamp", typeof(string));
-        table.Columns.Add("SolarSystemId", typeof(long));
-        return table;
-    }
-
-    private DataTable SetupStationsDataTable()
-    {
-        DataTable table = new DataTable();
-        table.Columns.Add("Id", typeof(long));
-        table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("UpdateTime", typeof(string));
-        table.Columns.Add("RealName", typeof(string));
-        table.Columns.Add("ControllingFactionId", typeof(long));
-        table.Columns.Add("ControllingFactionStateId", typeof(long));
-        table.Columns.Add("DistanceToArrival", typeof(double));
-        table.Columns.Add("PrimaryEconomyId", typeof(long));
-        table.Columns.Add("GovernmentId", typeof(long));
-        table.Columns.Add("StationTypeId", typeof(long));
-        table.Columns.Add("StateId", typeof(long));
-        table.Columns.Add("LargePads", typeof(int));
-        table.Columns.Add("MediumPads", typeof(int));
-        table.Columns.Add("SmallPads", typeof(int));
-        table.Columns.Add("MarketUpdateTime", typeof(string));
-        table.Columns.Add("CarrierDockingAccessId", typeof(long));
-        table.Columns.Add("CarrierName", typeof(string));
-        table.Columns.Add("ShipyardUpdateTime", typeof(string));
-        table.Columns.Add("OutfittingUpdateTime", typeof(string));
-        table.Columns.Add("AllegianceId", typeof(long));
-        table.Columns.Add("Latitude", typeof(double));
-        table.Columns.Add("Longitude", typeof(double));
-        table.Columns.Add("BodyId", typeof(long));
-        table.Columns.Add("SolarSystemId", typeof(long));
-        return table;
-    }
-
-    private DataTable SetupStationEconomiesDataTable()
-    {
-        DataTable table = new DataTable();
-        table.Columns.Add("StationId", typeof(long));
-        table.Columns.Add("EconomyId", typeof(long));
-        table.Columns.Add("Proportion", typeof(double));
-        return table;
-    }
-
-    private DataTable SetupStationServicesDataTable()
-    {
-        DataTable table = new DataTable();
-        table.Columns.Add("StationId", typeof(long));
-        table.Columns.Add("ServiceId", typeof(long));
-        return table;
-    }
-
-    private DataTable SetupStationsMappedToPlaceholderFactionDataTable()
-    {
-        DataTable table = new DataTable();
-        table.Columns.Add("StationId", typeof(long));
-        table.Columns.Add("FactionName", typeof(string));
-        return table;
     }
 }

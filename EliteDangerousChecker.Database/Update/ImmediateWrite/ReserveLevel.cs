@@ -1,4 +1,4 @@
-﻿using EliteDangerousChecker.Database.Update.ImmediateWrite;
+﻿namespace EliteDangerousChecker.Database.Update.ImmediateWrite;
 
 public record ReserveLevel(long Id, string Name) : IIdAndNameTableEntity { }
 

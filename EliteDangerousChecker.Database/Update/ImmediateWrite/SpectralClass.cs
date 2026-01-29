@@ -1,4 +1,4 @@
-﻿using EliteDangerousChecker.Database.Update.ImmediateWrite;
+﻿namespace EliteDangerousChecker.Database.Update.ImmediateWrite;
 
 public record SpectralClass(long Id, string Name) : IIdAndNameTableEntity { }
 

@@ -1,8 +1,8 @@
 ﻿namespace EliteDangerousChecker.Database.Update.ImmediateWrite;
 
-public record TerraformingState(long Id, string Name) : IIdAndNameTableEntity { }
+public record SectorSuffix(long Id, string Name) : IIdAndNameTableEntity { }
 
-public static class TerraformingStateAccess
+public static class SectorSuffixAccess
 {
     private static Dictionary<string, long>? Items { get; set; }
 
@@ -21,8 +21,8 @@ public static class TerraformingStateAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "TerraformingState");
+        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "SectorSuffix");
     }
 
-    private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<TerraformingState>(tableName: "TerraformingState", id, value);
+    private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<SectorSuffix>(tableName: "SectorSuffix", id, value);
 }

@@ -1,5 +1,6 @@
 begin transaction
 
+delete from SectorPrefix
 delete from StationsMappedToPlaceholderFaction
 delete from StationEconomies
 delete from StationServices
@@ -23,6 +24,9 @@ delete from Mineral
 delete from Power
 delete from PowerState
 delete from ReserveLevel
+delete from SectorPostfix
+delete from SectorPrefixWord
+delete from SectorSuffix
 delete from Security
 delete from Service
 delete from SpectralClass
@@ -30,6 +34,7 @@ delete from StationState
 delete from StationType
 delete from TerraformingState
 delete from VolcanismType
+
 
 commit transaction
 
