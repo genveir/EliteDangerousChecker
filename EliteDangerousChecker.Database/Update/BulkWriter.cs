@@ -16,6 +16,7 @@ public class BulkWriter
     Dictionary<string, long> FactionNameToId = new();
 
     DataTable SolarSystemFactions { get; set; }
+    DataTable SolarSystemPowers { get; set; }
 
     DataTable Bodies { get; set; }
     DataTable Rings { get; set; }
@@ -42,6 +43,7 @@ public class BulkWriter
         SectorPrefixes = DataTables.SetupSectorPrefixDataTable();
         Factions = DataTables.SetupFactionDataTable();
         SolarSystemFactions = DataTables.SetupSolarSystemFactionDataTable();
+        SolarSystemPowers = DataTables.SetupSolarSystemPowerDataTable();
         Bodies = DataTables.SetupBodiesDataTable();
         Rings = DataTables.SetupRingsDataTable();
         Stations = DataTables.SetupStationsDataTable();
@@ -114,6 +116,14 @@ public class BulkWriter
             {
                 await AddFaction(faction);
                 await AddSolarSystemFaction(solarSystem, faction);
+            }
+        }
+
+        if (solarSystem.Powers != null)
+        {
+            foreach (var power in solarSystem.Powers)
+            {
+                await AddSolarSystemPower(solarSystem, power);
             }
         }
 
@@ -277,6 +287,11 @@ public class BulkWriter
         if (hasPrefix)
         {
             bodyName = body.Name!.Substring(solarSystem.Name!.Length);
+        }
+
+        if ((bodyName?.Length ?? 0) > 16)
+        {
+            bodyName = bodyName![..16];
         }
 
         var row = Bodies.NewRow();
@@ -464,6 +479,14 @@ public class BulkWriter
         SolarSystemFactions.Rows.Add(row);
     }
 
+    private async Task AddSolarSystemPower(SolarSystem system, string? power)
+    {
+        var row = SolarSystemPowers.NewRow();
+        row["SolarSystemId"] = system.Id64;
+        row["PowerId"] = ValueOrDbNull(await PowerAccess.GetId(power));
+        SolarSystemPowers.Rows.Add(row);
+    }
+
     private long? OffsetToUnix(string? offset)
     {
         if (offset == null)
@@ -511,6 +534,9 @@ public class BulkWriter
 
             bulkCopy.DestinationTableName = "SolarSystemFaction";
             await bulkCopy.WriteToServerAsync(SolarSystemFactions);
+
+            bulkCopy.DestinationTableName = "SolarSystemPower";
+            await bulkCopy.WriteToServerAsync(SolarSystemPowers);
 
             bulkCopy.DestinationTableName = "Station";
             await bulkCopy.WriteToServerAsync(Stations);

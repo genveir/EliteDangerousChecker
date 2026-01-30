@@ -1,5 +1,3 @@
-begin transaction
-
 delete from SectorPrefix
 delete from StationsMappedToPlaceholderFaction
 delete from StationEconomies
@@ -8,6 +6,7 @@ delete from Station
 delete from Ring
 delete from Body
 delete from SolarSystemFaction
+delete from SolarSystemPower
 delete from SolarSystem
 delete from Faction
 
@@ -36,9 +35,6 @@ delete from StationState
 delete from StationType
 delete from TerraformingState
 delete from VolcanismType
-
-
-commit transaction
 
  ALTER DATABASE Elite SET RECOVERY SIMPLE
  DBCC SHRINKFILE (Elite_Log, 1)

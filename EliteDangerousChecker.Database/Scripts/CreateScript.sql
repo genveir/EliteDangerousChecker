@@ -65,6 +65,12 @@ create table SolarSystemFaction (
 
 alter table SolarSystemFaction add constraint PK_SolarSystemFaction primary key (SolarSystemId, FactionId);
 
+create table SolarSystemPower (
+	SolarSystemId bigint not null,
+	PowerId bigint not null);
+
+alter table SolarSystemPower add constraint PK_SolarSystemPower primary key (SolarSystemId, PowerId);
+
 create table Body (
 	Id bigint primary key,
 	BodyId int,
@@ -186,6 +192,9 @@ alter table SolarSystemFaction add constraint FK_SolarSystemFaction_SolarSystem 
 alter table SolarSystemFaction add constraint FK_SolarSystemFaction_Faction foreign key (FactionId) references Faction (Id);
 alter table SolarSystemFaction add constraint FK_SolarSystemFaction_FactionState foreign key (FactionStateId) references FactionState (Id);
 
+alter table SolarSystemPower add constraint FK_SolarSystemPower_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
+alter table SolarSystemPower add constraint FK_SolarSystemPower_Power foreign key (PowerId) references Power (Id);
+
 alter table Body add constraint FK_Body_BodyType foreign key (BodyTypeId) references BodyType (Id);
 alter table Body add constraint FK_Body_BodySubType foreign key (BodySubTypeId) references BodySubType (Id);
 alter table Body add constraint FK_Body_SpectralClass foreign key (SpectralClassId) references SpectralClass (Id);
@@ -219,5 +228,12 @@ alter table SectorPrefix add constraint FK_SectorPrefix_SectorPrefixWord foreign
 
 alter table Ring add constraint FK_Ring_Body foreign key (BodyId) references Body (Id);
 alter table Ring add constraint FK_Ring_RingType foreign key (RingTypeId) references RingType (Id);
+
+
+create index IX_SolarSystem_ControllingPower on SolarSystem (ControllingPowerId)
+
+create index IX_SolarSystemPower_Power on SolarSystemPower (PowerId);
+
+create index IX_Ring_RingType on Ring (RingTypeId)
 
 commit transaction

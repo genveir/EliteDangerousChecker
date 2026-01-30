@@ -68,6 +68,14 @@ internal static class DataTables
         return table;
     }
 
+    public static DataTable SetupSolarSystemPowerDataTable()
+    {
+        var table = new DataTable();
+        table.Columns.Add("SolarSystemId", typeof(long));
+        table.Columns.Add("PowerId", typeof(long));
+        return table;
+    }
+
     public static DataTable SetupBodiesDataTable()
     {
         var table = new DataTable();
