@@ -104,7 +104,6 @@ create table FactionState (Id bigint primary key, Name nvarchar(32) not null);
 create table Government (Id bigint primary key, Name nvarchar(32) not null);
 create table Luminosity (Id bigint primary key, Name nvarchar(32) not null);
 create table Material (Id bigint primary key, Name nvarchar(32) not null);
-create table Mineral (Id bigint primary key, Name nvarchar(32) not null);
 create table Power (Id bigint primary key, Name nvarchar(32) not null);
 create table PowerState (Id bigint primary key, Name nvarchar(32) not null);
 create table ReserveLevel (Id bigint primary key, Name nvarchar(32) not null);
