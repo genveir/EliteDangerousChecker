@@ -14,6 +14,7 @@ create table Mineral (Id bigint primary key, Name nvarchar(32) not null);
 create table Power (Id bigint primary key, Name nvarchar(32) not null);
 create table PowerState (Id bigint primary key, Name nvarchar(32) not null);
 create table ReserveLevel (Id bigint primary key, Name nvarchar(32) not null);
+create table RingType (Id bigint primary key, Name nvarchar(32) not null);
 create table SectorPostfix (Id bigint primary key, Name nvarchar(5) not null);
 create table SectorPrefixWord (Id bigint primary key, Name nvarchar(32) not null);
 create table SectorSuffix (Id bigint primary key, Name nvarchar(4) not null);
@@ -155,6 +156,16 @@ create table SectorPrefix (
 	StartWithDash bit,
 	StartWithJ bit);
 
+create table Ring (
+	Id bigint primary key,
+	Name nvarchar(32),
+	BodyNameIsPrefix bit,
+	BodyId bigint,
+	RingTypeId bigint,
+	Mass float,
+	InnerRadius float,
+	OuterRadius float);
+
 alter table SectorPrefix add constraint PK_SectorPrefix primary key (SolarSystemId, Sequence);
 
 alter table Faction add constraint FK_Faction_Allegiance foreign key (AllegianceId) references Allegiance (Id);
@@ -205,5 +216,8 @@ alter table StationsMappedToPlaceholderFaction add constraint FK_StationsMappedT
 
 alter table SectorPrefix add constraint FK_SectorPrefix_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
 alter table SectorPrefix add constraint FK_SectorPrefix_SectorPrefixWord foreign key (SectorPrefixWordId) references SectorPrefixWord (Id);
+
+alter table Ring add constraint FK_Ring_Body foreign key (BodyId) references Body (Id);
+alter table Ring add constraint FK_Ring_RingType foreign key (RingTypeId) references RingType (Id);
 
 commit transaction

@@ -18,6 +18,8 @@ public class BulkWriter
     DataTable SolarSystemFactions { get; set; }
 
     DataTable Bodies { get; set; }
+    DataTable Rings { get; set; }
+    long nextRingId { get; set; }
 
     DataTable Stations { get; set; }
     DataTable StationEconomies { get; set; }
@@ -41,6 +43,7 @@ public class BulkWriter
         Factions = DataTables.SetupFactionDataTable();
         SolarSystemFactions = DataTables.SetupSolarSystemFactionDataTable();
         Bodies = DataTables.SetupBodiesDataTable();
+        Rings = DataTables.SetupRingsDataTable();
         Stations = DataTables.SetupStationsDataTable();
         StationEconomies = DataTables.SetupStationEconomiesDataTable();
         StationServices = DataTables.SetupStationServicesDataTable();
@@ -59,6 +62,11 @@ public class BulkWriter
         nextFactionId = existingFactions.Any()
             ? existingFactions.Max(f => f.Id) + 1
             : 1;
+
+        var existingLowestRingId = await connection.QueryFirstOrDefaultAsync<long?>("select min(Id) from Ring");
+        nextRingId = existingLowestRingId.HasValue
+            ? existingLowestRingId.Value - 1
+            : -1;
 
         // story NPC corp, no systems
         var brewerCorporation = new Faction()
@@ -166,6 +174,14 @@ public class BulkWriter
                 await AddStationServices(station);
             }
         }
+
+        if (body.Rings != null)
+        {
+            foreach (var ring in body.Rings)
+            {
+                await AddRingToDataTable(ring, body);
+            }
+        }
     }
 
     private async Task AddSolarSystemToDataTable(SolarSystem solarSystem, string? suffix, string? postfix)
@@ -260,7 +276,7 @@ public class BulkWriter
         string? bodyName = body.Name;
         if (hasPrefix)
         {
-            bodyName = body.Name!.Substring(solarSystem.Name!.Length).Trim();
+            bodyName = body.Name!.Substring(solarSystem.Name!.Length);
         }
 
         var row = Bodies.NewRow();
@@ -394,6 +410,33 @@ public class BulkWriter
         }
     }
 
+    private async Task AddRingToDataTable(Ring ring, Body body)
+    {
+        var hasPrefix = ring.Name != null && ring.Name.StartsWith(body.Name!);
+
+        string? ringName = ring.Name;
+        if (hasPrefix)
+        {
+            ringName = ring.Name!.Substring(body.Name!.Length);
+        }
+
+        if (ring.Id64 == null)
+        {
+            ring.Id64 = nextRingId--;
+        }
+
+        var row = Rings.NewRow();
+        row["Id"] = ring.Id64;
+        row["Name"] = ValueOrDbNull(ringName);
+        row["BodyNameIsPrefix"] = hasPrefix;
+        row["BodyId"] = body.Id64;
+        row["RingTypeId"] = ValueOrDbNull(await RingTypeAccess.GetId(ring.Type));
+        row["Mass"] = ValueOrDbNull(ring.Mass);
+        row["InnerRadius"] = ValueOrDbNull(ring.InnerRadius);
+        row["OuterRadius"] = ValueOrDbNull(ring.OuterRadius);
+        Rings.Rows.Add(row);
+    }
+
     private async Task AddFaction(Faction faction)
     {
         if (faction.Name == null || FactionNameToId.ContainsKey(faction.Name))
@@ -441,6 +484,9 @@ public class BulkWriter
 
             bulkCopy.DestinationTableName = "Body";
             await bulkCopy.WriteToServerAsync(Bodies);
+
+            bulkCopy.DestinationTableName = "Ring";
+            await bulkCopy.WriteToServerAsync(Rings);
 
             bulkCopy.DestinationTableName = "Faction";
             await bulkCopy.WriteToServerAsync(Factions);

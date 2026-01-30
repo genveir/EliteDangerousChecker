@@ -166,4 +166,18 @@ internal static class DataTables
         table.Columns.Add("FactionName", typeof(string));
         return table;
     }
+
+    public static DataTable SetupRingsDataTable()
+    {
+        DataTable table = new DataTable();
+        table.Columns.Add("Id", typeof(long));
+        table.Columns.Add("Name", typeof(string));
+        table.Columns.Add("BodyNameIsPrefix", typeof(bool));
+        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("RingTypeId", typeof(long));
+        table.Columns.Add("Mass", typeof(double));
+        table.Columns.Add("InnerRadius", typeof(double));
+        table.Columns.Add("OuterRadius", typeof(double));
+        return table;
+    }
 }

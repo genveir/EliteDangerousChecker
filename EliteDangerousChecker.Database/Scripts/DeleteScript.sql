@@ -5,6 +5,7 @@ delete from StationsMappedToPlaceholderFaction
 delete from StationEconomies
 delete from StationServices
 delete from Station
+delete from Ring
 delete from Body
 delete from SolarSystemFaction
 delete from SolarSystem
@@ -24,6 +25,7 @@ delete from Mineral
 delete from Power
 delete from PowerState
 delete from ReserveLevel
+delete from RingType
 delete from SectorPostfix
 delete from SectorPrefixWord
 delete from SectorSuffix
