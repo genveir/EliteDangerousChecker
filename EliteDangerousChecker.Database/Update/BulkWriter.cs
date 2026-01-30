@@ -17,10 +17,15 @@ public class BulkWriter
 
     DataTable SolarSystemFactions { get; set; }
     DataTable SolarSystemPowers { get; set; }
+    DataTable SolarSystemPowerConflictProgress { get; set; }
 
     DataTable Bodies { get; set; }
     DataTable Rings { get; set; }
     long nextRingId { get; set; }
+
+    DataTable BodySignalTypes { get; set; }
+    DataTable BodySignalGenuses { get; set; }
+
 
     DataTable Stations { get; set; }
     DataTable StationEconomies { get; set; }
@@ -44,8 +49,11 @@ public class BulkWriter
         Factions = DataTables.SetupFactionDataTable();
         SolarSystemFactions = DataTables.SetupSolarSystemFactionDataTable();
         SolarSystemPowers = DataTables.SetupSolarSystemPowerDataTable();
+        SolarSystemPowerConflictProgress = DataTables.SetupSolarSystemPowerConflictProgressDataTable();
         Bodies = DataTables.SetupBodiesDataTable();
         Rings = DataTables.SetupRingsDataTable();
+        BodySignalTypes = DataTables.SetupBodySignalTypesDataTable();
+        BodySignalGenuses = DataTables.SetupBodySignalGenusesDataTable();
         Stations = DataTables.SetupStationsDataTable();
         StationEconomies = DataTables.SetupStationEconomiesDataTable();
         StationServices = DataTables.SetupStationServicesDataTable();
@@ -127,6 +135,14 @@ public class BulkWriter
             }
         }
 
+        if (solarSystem.PowerConflictProgress != null)
+        {
+            foreach (var powerConflict in solarSystem.PowerConflictProgress)
+            {
+                await AddSolarSystemPowerConflictProgress(solarSystem, powerConflict);
+            }
+        }
+
         var (prefixWords, suffix, postfix) = ParseName(solarSystem);
 
         await AddSolarSystemToDataTable(solarSystem, suffix, postfix);
@@ -190,6 +206,19 @@ public class BulkWriter
             foreach (var ring in body.Rings)
             {
                 await AddRingToDataTable(ring, body);
+            }
+        }
+
+        if (body.Signals != null)
+        {
+            foreach (var signalType in body.Signals.SignalTypes ?? [])
+            {
+                await AddBodySignalTypeToDataTable(body, signalType);
+            }
+
+            foreach (var signalGenus in body.Signals.Genuses ?? [])
+            {
+                await AddBodySignalGenusToDataTable(body, signalGenus);
             }
         }
     }
@@ -334,6 +363,23 @@ public class BulkWriter
         row["SolarSystemId"] = solarSystem.Id64;
         row["SolarSystemNameIsPrefix"] = hasPrefix;
         Bodies.Rows.Add(row);
+    }
+
+    private async Task AddBodySignalTypeToDataTable(Body body, KeyValuePair<string, int> signalType)
+    {
+        var row = BodySignalTypes.NewRow();
+        row["BodyId"] = body.Id64;
+        row["SignalTypeId"] = ValueOrDbNull(await SignalTypeAccess.GetId(signalType.Key));
+        row["Number"] = ValueOrDbNull(signalType.Value);
+        BodySignalTypes.Rows.Add(row);
+    }
+
+    private async Task AddBodySignalGenusToDataTable(Body body, string genus)
+    {
+        var row = BodySignalGenuses.NewRow();
+        row["BodyId"] = body.Id64;
+        row["SignalGenusId"] = ValueOrDbNull(await SignalGenusAccess.GetId(genus));
+        BodySignalGenuses.Rows.Add(row);
     }
 
     private async Task AddStationToDataTable(Station station, SolarSystem solarSystem)
@@ -487,6 +533,15 @@ public class BulkWriter
         SolarSystemPowers.Rows.Add(row);
     }
 
+    private async Task AddSolarSystemPowerConflictProgress(SolarSystem system, PowerConflictProgress powerConflictProgress)
+    {
+        var row = SolarSystemPowerConflictProgress.NewRow();
+        row["SolarSystemId"] = system.Id64;
+        row["PowerId"] = ValueOrDbNull(await PowerAccess.GetId(powerConflictProgress.Power));
+        row["Progress"] = ValueOrDbNull(powerConflictProgress.Progress ?? 0);
+        SolarSystemPowerConflictProgress.Rows.Add(row);
+    }
+
     private long? OffsetToUnix(string? offset)
     {
         if (offset == null)
@@ -523,6 +578,12 @@ public class BulkWriter
             bulkCopy.DestinationTableName = "Ring";
             await bulkCopy.WriteToServerAsync(Rings);
 
+            bulkCopy.DestinationTableName = "BodySignalType";
+            await bulkCopy.WriteToServerAsync(BodySignalTypes);
+
+            bulkCopy.DestinationTableName = "BodySignalGenus";
+            await bulkCopy.WriteToServerAsync(BodySignalGenuses);
+
             bulkCopy.DestinationTableName = "Faction";
             await bulkCopy.WriteToServerAsync(Factions);
 
@@ -537,6 +598,9 @@ public class BulkWriter
 
             bulkCopy.DestinationTableName = "SolarSystemPower";
             await bulkCopy.WriteToServerAsync(SolarSystemPowers);
+
+            bulkCopy.DestinationTableName = "SolarSystemPowerConflictProgress";
+            await bulkCopy.WriteToServerAsync(SolarSystemPowerConflictProgress);
 
             bulkCopy.DestinationTableName = "Station";
             await bulkCopy.WriteToServerAsync(Stations);

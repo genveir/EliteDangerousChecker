@@ -76,6 +76,15 @@ internal static class DataTables
         return table;
     }
 
+    public static DataTable SetupSolarSystemPowerConflictProgressDataTable()
+    {
+        var table = new DataTable();
+        table.Columns.Add("SolarSystemId", typeof(long));
+        table.Columns.Add("PowerId", typeof(long));
+        table.Columns.Add("Progress", typeof(double));
+        return table;
+    }
+
     public static DataTable SetupBodiesDataTable()
     {
         var table = new DataTable();
@@ -186,6 +195,23 @@ internal static class DataTables
         table.Columns.Add("Mass", typeof(double));
         table.Columns.Add("InnerRadius", typeof(double));
         table.Columns.Add("OuterRadius", typeof(double));
+        return table;
+    }
+
+    public static DataTable SetupBodySignalTypesDataTable()
+    {
+        DataTable table = new DataTable();
+        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("SignalTypeId", typeof(long));
+        table.Columns.Add("Number", typeof(int));
+        return table;
+    }
+
+    public static DataTable SetupBodySignalGenusesDataTable()
+    {
+        DataTable table = new DataTable();
+        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("SignalGenusId", typeof(long));
         return table;
     }
 }

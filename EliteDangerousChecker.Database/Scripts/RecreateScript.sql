@@ -92,6 +92,7 @@ GO
 IF NOT EXISTS (SELECT name FROM sys.filegroups WHERE is_default=1 AND name = N'PRIMARY') ALTER DATABASE [Elite] MODIFY FILEGROUP [PRIMARY] DEFAULT
 GO
 
+-- Text Tables
 
 create table Allegiance (Id bigint primary key, Name nvarchar(32) not null);
 create table AtmosphereType (Id bigint primary key, Name nvarchar(64) not null);
@@ -113,11 +114,15 @@ create table SectorPrefixWord (Id bigint primary key, Name nvarchar(32) not null
 create table SectorSuffix (Id bigint primary key, Name nvarchar(4) not null);
 create table Security (Id bigint primary key, Name nvarchar(32) not null);
 create table Service (Id bigint primary key, Name nvarchar(32) not null);
+create table SignalType (Id bigint primary key, Name nvarchar(32) not null);
+create table SignalGenus (Id bigint primary key, Name nvarchar(64) not null);
 create table SpectralClass (Id bigint primary key, Name nvarchar(32) not null);
 create table StationState (Id bigint primary key, Name nvarchar(32) not null);
 create table StationType (Id bigint primary key, Name nvarchar(32) not null);
 create table TerraformingState (Id bigint primary key, Name nvarchar(32) not null);
 create table VolcanismType (Id bigint primary key, Name nvarchar(32) not null);
+
+-- Main Tables
 
 create table Faction (
 	Id bigint primary key,
@@ -164,6 +169,13 @@ create table SolarSystemPower (
 
 alter table SolarSystemPower add constraint PK_SolarSystemPower primary key (SolarSystemId, PowerId);
 
+create table SolarSystemPowerConflictProgress (
+	SolarSystemId bigint not null,
+	PowerId bigint not null,
+	Progress float not null);
+
+alter table SolarSystemPowerConflictProgress add constraint PK_SolarSystemPowerConflictProgress primary key (SolarSystemId, PowerId);
+
 create table Body (
 	Id bigint primary key,
 	BodyId int,
@@ -202,7 +214,8 @@ create table Body (
 	MeanAnomalyTimestamp bigint,
 	AscendingNodeTimestamp bigint,
 	SolarSystemId bigint,
-	SolarSystemNameIsPrefix bit);
+	SolarSystemNameIsPrefix bit,
+	SignalsUpdateTime bigint);
 
 create table Station (
 	Id bigint primary key,
@@ -255,6 +268,8 @@ create table SectorPrefix (
 	StartWithDash bit,
 	StartWithJ bit);
 
+alter table SectorPrefix add constraint PK_SectorPrefix primary key (SolarSystemId, Sequence);
+
 create table Ring (
 	Id bigint primary key,
 	Name nvarchar(32),
@@ -265,7 +280,20 @@ create table Ring (
 	InnerRadius float,
 	OuterRadius float);
 
-alter table SectorPrefix add constraint PK_SectorPrefix primary key (SolarSystemId, Sequence);
+create table BodySignalType (
+	BodyId bigint not null,
+	SignalTypeId bigint not null,
+	Number int not null)
+
+alter table BodySignalType add constraint PK_BodySignalType primary key (BodyId, SignalTypeId);
+
+create table BodySignalGenus (
+	BodyId bigint not null,
+	SignalGenusId bigint not null)
+
+alter table BodySignalGenus add constraint PK_BodySignalGenus primary key (BodyId, SignalGenusId);
+
+-- Foreign Keys
 
 alter table Faction add constraint FK_Faction_Allegiance foreign key (AllegianceId) references Allegiance (Id);
 alter table Faction add constraint FK_Faction_Government foreign key (GovernmentId) references Government (Id);
@@ -287,6 +315,9 @@ alter table SolarSystemFaction add constraint FK_SolarSystemFaction_FactionState
 
 alter table SolarSystemPower add constraint FK_SolarSystemPower_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
 alter table SolarSystemPower add constraint FK_SolarSystemPower_Power foreign key (PowerId) references Power (Id);
+
+alter table SolarSystemPowerConflictProgress add constraint FK_SolarSystemPowerConflictProgress_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
+alter table SolarSystemPowerConflictProgress add constraint FK_SolarSystemPowerConflictProgress_Power foreign key (PowerId) references Power (Id);
 
 alter table Body add constraint FK_Body_BodyType foreign key (BodyTypeId) references BodyType (Id);
 alter table Body add constraint FK_Body_BodySubType foreign key (BodySubTypeId) references BodySubType (Id);
@@ -322,10 +353,13 @@ alter table SectorPrefix add constraint FK_SectorPrefix_SectorPrefixWord foreign
 alter table Ring add constraint FK_Ring_Body foreign key (BodyId) references Body (Id);
 alter table Ring add constraint FK_Ring_RingType foreign key (RingTypeId) references RingType (Id);
 
+-- Indexes
 
 create index IX_SolarSystem_ControllingPower on SolarSystem (ControllingPowerId)
 
 create index IX_SolarSystemPower_Power on SolarSystemPower (PowerId);
+
+create index IX_SolarSystemPowerConflictProgress_Power on SolarSystemPowerConflictProgress (PowerId);
 
 create index IX_Ring_RingType on Ring (RingTypeId)
 create index IX_Ring_Body on Ring (BodyId);
