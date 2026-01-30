@@ -20,7 +20,7 @@ public static class GovernmentAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "Government");
+        Items = await IdAndNameTableAccess.GetItems<Government>(tableName: "Government");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<Government>(tableName: "Government", id, value);

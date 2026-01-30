@@ -20,7 +20,7 @@ public static class EconomyAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "Economy");
+        Items = await IdAndNameTableAccess.GetItems<Economy>(tableName: "Economy");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<Economy>(tableName: "Economy", id, value);

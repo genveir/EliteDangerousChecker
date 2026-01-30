@@ -20,7 +20,7 @@ public static class StationTypeAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "StationType");
+        Items = await IdAndNameTableAccess.GetItems<StationType>(tableName: "StationType");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<StationType>(tableName: "StationType", id, value);

@@ -21,7 +21,7 @@ public static class BodyTypeAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "BodyType");
+        Items = await IdAndNameTableAccess.GetItems<BodyType>(tableName: "BodyType");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<BodyType>(tableName: "BodyType", id, value);

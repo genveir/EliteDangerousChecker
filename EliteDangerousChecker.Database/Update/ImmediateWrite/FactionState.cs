@@ -20,7 +20,7 @@ public static class FactionStateAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "FactionState");
+        Items = await IdAndNameTableAccess.GetItems<FactionState>(tableName: "FactionState");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<FactionState>(tableName: "FactionState", id, value);

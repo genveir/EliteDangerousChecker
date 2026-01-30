@@ -21,7 +21,7 @@ public static class SectorSuffixAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "SectorSuffix");
+        Items = await IdAndNameTableAccess.GetItems<SectorSuffix>(tableName: "SectorSuffix");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<SectorSuffix>(tableName: "SectorSuffix", id, value);

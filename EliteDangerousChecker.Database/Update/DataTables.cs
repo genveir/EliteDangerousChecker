@@ -126,6 +126,31 @@ internal static class DataTables
         table.Columns.Add("AscendingNodeTimestamp", typeof(string));
         table.Columns.Add("SolarSystemId", typeof(long));
         table.Columns.Add("SolarSystemNameIsPrefix", typeof(bool));
+        table.Columns.Add("Carbon", typeof(double));
+        table.Columns.Add("Iron", typeof(double));
+        table.Columns.Add("Nickel", typeof(double));
+        table.Columns.Add("Niobium", typeof(double));
+        table.Columns.Add("Phosphorus", typeof(double));
+        table.Columns.Add("Sulphur", typeof(double));
+        table.Columns.Add("Tellurium", typeof(double));
+        table.Columns.Add("Tungsten", typeof(double));
+        table.Columns.Add("Vanadium", typeof(double));
+        table.Columns.Add("Zinc", typeof(double));
+        table.Columns.Add("Zirconium", typeof(double));
+        table.Columns.Add("Germanium", typeof(double));
+        table.Columns.Add("Manganese", typeof(double));
+        table.Columns.Add("Molybdenum", typeof(double));
+        table.Columns.Add("Selenium", typeof(double));
+        table.Columns.Add("Yttrium", typeof(double));
+        table.Columns.Add("Cadmium", typeof(double));
+        table.Columns.Add("Ruthenium", typeof(double));
+        table.Columns.Add("Arsenic", typeof(double));
+        table.Columns.Add("Antimony", typeof(double));
+        table.Columns.Add("Chromium", typeof(double));
+        table.Columns.Add("Tin", typeof(double));
+        table.Columns.Add("Mercury", typeof(double));
+        table.Columns.Add("Technetium", typeof(double));
+        table.Columns.Add("Polonium", typeof(double));
         return table;
     }
 
@@ -156,6 +181,18 @@ internal static class DataTables
         table.Columns.Add("Longitude", typeof(double));
         table.Columns.Add("BodyId", typeof(long));
         table.Columns.Add("SolarSystemId", typeof(long));
+        return table;
+    }
+
+    public static DataTable SetupStationCommoditiesDataTable()
+    {
+        DataTable table = new DataTable();
+        table.Columns.Add("StationId", typeof(long));
+        table.Columns.Add("CommodityId", typeof(long));
+        table.Columns.Add("Supply", typeof(int));
+        table.Columns.Add("Demand", typeof(int));
+        table.Columns.Add("BuyPrice", typeof(int));
+        table.Columns.Add("SellPrice", typeof(int));
         return table;
     }
 

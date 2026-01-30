@@ -20,7 +20,7 @@ public static class CarrierDockingAccessAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "CarrierDockingAccess");
+        Items = await IdAndNameTableAccess.GetItems<CarrierDockingAccess>(tableName: "CarrierDockingAccess");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<CarrierDockingAccess>(tableName: "CarrierDockingAccess", id, value);

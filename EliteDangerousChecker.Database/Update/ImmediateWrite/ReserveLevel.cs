@@ -21,7 +21,7 @@ public static class ReserveLevelAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "ReserveLevel");
+        Items = await IdAndNameTableAccess.GetItems<ReserveLevel>(tableName: "ReserveLevel");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<ReserveLevel>(tableName: "ReserveLevel", id, value);

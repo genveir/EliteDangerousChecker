@@ -99,11 +99,12 @@ create table AtmosphereType (Id bigint primary key, Name nvarchar(64) not null);
 create table BodySubType (Id bigint primary key, Name nvarchar(64) not null);
 create table BodyType (Id bigint primary key, Name nvarchar(32) not null);
 create table CarrierDockingAccess (Id bigint primary key, Name nvarchar(32) not null);
+create table Commodity (Id bigint primary key, CommodityCategoryId bigint, Name nvarchar(64) not null);
+create table CommodityCategory (Id bigint primary key, Name nvarchar(32) not null);
 create table Economy (Id bigint primary key, Name nvarchar(32) not null);
 create table FactionState (Id bigint primary key, Name nvarchar(32) not null);
 create table Government (Id bigint primary key, Name nvarchar(32) not null);
 create table Luminosity (Id bigint primary key, Name nvarchar(32) not null);
-create table Material (Id bigint primary key, Name nvarchar(32) not null);
 create table Power (Id bigint primary key, Name nvarchar(32) not null);
 create table PowerState (Id bigint primary key, Name nvarchar(32) not null);
 create table ReserveLevel (Id bigint primary key, Name nvarchar(32) not null);
@@ -214,7 +215,32 @@ create table Body (
 	AscendingNodeTimestamp bigint,
 	SolarSystemId bigint,
 	SolarSystemNameIsPrefix bit,
-	SignalsUpdateTime bigint);
+	SignalsUpdateTime bigint,
+	Carbon float,
+	Iron float,
+	Nickel float,
+	Niobium float,
+	Phosphorus float,
+	Sulphur float,
+	Tellurium float,
+	Tungsten float,
+	Vanadium float,
+	Zinc float,
+	Zirconium float,
+	Germanium float,
+	Manganese float,
+	Molybdenum float,
+	Selenium float,
+	Yttrium float,
+	Cadmium float,
+	Ruthenium float,
+	Arsenic float,
+	Antimony float,
+	Chromium float,
+	Tin float,
+	Mercury float,
+	Technetium float,
+	Polonium float);
 
 create table Station (
 	Id bigint primary key,
@@ -241,6 +267,16 @@ create table Station (
 	Longitude float,
 	BodyId bigint,
 	SolarSystemId bigint);
+
+create table StationCommodities (
+	StationId bigint not null,
+	CommodityId bigint not null,
+	Demand int,
+	Supply int,
+	BuyPrice int,
+	SellPrice int);
+
+alter table StationCommodities add constraint PK_StationCommodities primary key (StationId, CommodityId);
 
 create table StationEconomies (
 	StationId bigint not null,
@@ -307,6 +343,8 @@ alter table RingSignalGenus add constraint PK_RingSignalGenus primary key (RingI
 
 -- Foreign Keys
 
+alter table Commodity add constraint FK_Commodity_CommodityCategory foreign key (CommodityCategoryId) references CommodityCategory (Id);
+
 alter table Faction add constraint FK_Faction_Allegiance foreign key (AllegianceId) references Allegiance (Id);
 alter table Faction add constraint FK_Faction_Government foreign key (GovernmentId) references Government (Id);
 
@@ -351,6 +389,9 @@ alter table Station add constraint FK_Station_Allegiance foreign key (Allegiance
 alter table Station add constraint FK_Station_Body foreign key (BodyId) references Body (Id);
 alter table Station add constraint FK_Station_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
 
+alter table StationCommodities add constraint FK_StationCommodities_Station foreign key (StationId) references Station (Id);
+alter table StationCommodities add constraint FK_StationCommodities_Commodity foreign key (CommodityId) references Commodity (Id);
+
 alter table StationEconomies add constraint FK_StationEconomies_Station foreign key (StationId) references Station (Id);
 alter table StationEconomies add constraint FK_StationEconomies_Economy foreign key (EconomyId) references Economy (Id);
 
@@ -389,3 +430,6 @@ create index IX_Ring_RingType on Ring (RingTypeId)
 create index IX_Ring_Body on Ring (BodyId);
 
 create index IX_Body_SolarSystem on Body (SolarSystemId);
+
+create index IX_StationCommodities_CommodityBuy on StationCommodities (CommodityId, BuyPrice);
+create index IX_StationCommodities_CommoditySell on StationCommodities (CommodityId, SellPrice);

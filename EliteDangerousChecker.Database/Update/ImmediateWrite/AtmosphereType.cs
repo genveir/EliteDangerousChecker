@@ -21,7 +21,7 @@ public static class AtmosphereTypeAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "AtmosphereType");
+        Items = await IdAndNameTableAccess.GetItems<AtmosphereType>(tableName: "AtmosphereType");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<AtmosphereType>(tableName: "AtmosphereType", id, value);

@@ -21,7 +21,7 @@ public static class VolcanismTypeAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "VolcanismType");
+        Items = await IdAndNameTableAccess.GetItems<VolcanismType>(tableName: "VolcanismType");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<VolcanismType>(tableName: "VolcanismType", id, value);

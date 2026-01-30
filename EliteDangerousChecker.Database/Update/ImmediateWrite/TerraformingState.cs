@@ -21,7 +21,7 @@ public static class TerraformingStateAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "TerraformingState");
+        Items = await IdAndNameTableAccess.GetItems<TerraformingState>(tableName: "TerraformingState");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<TerraformingState>(tableName: "TerraformingState", id, value);

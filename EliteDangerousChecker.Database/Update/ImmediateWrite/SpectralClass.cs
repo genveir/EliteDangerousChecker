@@ -21,7 +21,7 @@ public static class SpectralClassAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "SpectralClass");
+        Items = await IdAndNameTableAccess.GetItems<SpectralClass>(tableName: "SpectralClass");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<SpectralClass>(tableName: "SpectralClass", id, value);

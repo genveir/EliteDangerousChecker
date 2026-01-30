@@ -1,8 +1,7 @@
 ﻿namespace EliteDangerousChecker.Database.Update.ImmediateWrite;
+public record CommodityCategory(long Id, string Name) : IIdAndNameTableEntity { }
 
-public record Material(long Id, string Name) : IIdAndNameTableEntity { }
-
-public static class MaterialAccess
+public static class CommodityCategoryAccess
 {
     private static Dictionary<string, long>? Items { get; set; }
 
@@ -21,8 +20,8 @@ public static class MaterialAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "Material");
+        Items = await IdAndNameTableAccess.GetItems<CommodityCategory>(tableName: "CommodityCategory");
     }
 
-    private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<Material>(tableName: "Material", id, value);
+    private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<CommodityCategory>(tableName: "CommodityCategory", id, value);
 }

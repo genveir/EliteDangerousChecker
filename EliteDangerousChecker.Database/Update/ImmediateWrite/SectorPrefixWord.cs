@@ -21,7 +21,7 @@ public static class SectorPrefixWordAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "SectorPrefixWord");
+        Items = await IdAndNameTableAccess.GetItems<SectorPrefixWord>(tableName: "SectorPrefixWord");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<SectorPrefixWord>(tableName: "SectorPrefixWord", id, value);

@@ -30,6 +30,7 @@ public class BulkWriter
     DataTable RingSignalGenuses { get; set; }
 
     DataTable Stations { get; set; }
+    DataTable StationCommodities { get; set; }
     DataTable StationEconomies { get; set; }
     DataTable StationServices { get; set; }
     DataTable StationsMappedToPlaceholderFaction { get; set; }
@@ -59,6 +60,7 @@ public class BulkWriter
         RingSignalTypes = DataTables.SetupRingSignalTypesDataTable();
         RingSignalGenuses = DataTables.SetupRingSignalGenusesDataTable();
         Stations = DataTables.SetupStationsDataTable();
+        StationCommodities = DataTables.SetupStationCommoditiesDataTable();
         StationEconomies = DataTables.SetupStationEconomiesDataTable();
         StationServices = DataTables.SetupStationServicesDataTable();
         StationsMappedToPlaceholderFaction = DataTables.SetupStationsMappedToPlaceholderFactionDataTable();
@@ -200,8 +202,9 @@ public class BulkWriter
             foreach (var station in body.Stations)
             {
                 await AddStationToDataTable(station, solarSystem, body);
-                await AddStationEconomies(station);
-                await AddStationServices(station);
+                await AddStationCommoditiesToDataTable(station.Market, station);
+                await AddStationEconomiesToDataTable(station);
+                await AddStationServicesToDataTable(station);
             }
         }
 
@@ -378,6 +381,31 @@ public class BulkWriter
         row["AscendingNodeTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.AscendingNode));
         row["SolarSystemId"] = solarSystem.Id64;
         row["SolarSystemNameIsPrefix"] = hasPrefix;
+        row["Carbon"] = GetDictValueOrDbNull(body.Materials, "Carbon");
+        row["Iron"] = GetDictValueOrDbNull(body.Materials, "Iron");
+        row["Nickel"] = GetDictValueOrDbNull(body.Materials, "Nickel");
+        row["Niobium"] = GetDictValueOrDbNull(body.Materials, "Niobium");
+        row["Phosphorus"] = GetDictValueOrDbNull(body.Materials, "Phosphorus");
+        row["Sulphur"] = GetDictValueOrDbNull(body.Materials, "Sulphur");
+        row["Tellurium"] = GetDictValueOrDbNull(body.Materials, "Tellurium");
+        row["Tungsten"] = GetDictValueOrDbNull(body.Materials, "Tungsten");
+        row["Vanadium"] = GetDictValueOrDbNull(body.Materials, "Vanadium");
+        row["Zinc"] = GetDictValueOrDbNull(body.Materials, "Zinc");
+        row["Zirconium"] = GetDictValueOrDbNull(body.Materials, "Zirconium");
+        row["Germanium"] = GetDictValueOrDbNull(body.Materials, "Germanium");
+        row["Manganese"] = GetDictValueOrDbNull(body.Materials, "Manganese");
+        row["Molybdenum"] = GetDictValueOrDbNull(body.Materials, "Molybdenum");
+        row["Selenium"] = GetDictValueOrDbNull(body.Materials, "Selenium");
+        row["Yttrium"] = GetDictValueOrDbNull(body.Materials, "Yttrium");
+        row["Cadmium"] = GetDictValueOrDbNull(body.Materials, "Cadmium");
+        row["Ruthenium"] = GetDictValueOrDbNull(body.Materials, "Ruthenium");
+        row["Arsenic"] = GetDictValueOrDbNull(body.Materials, "Arsenic");
+        row["Antimony"] = GetDictValueOrDbNull(body.Materials, "Antimony");
+        row["Chromium"] = GetDictValueOrDbNull(body.Materials, "Chromium");
+        row["Tin"] = GetDictValueOrDbNull(body.Materials, "Tin");
+        row["Mercury"] = GetDictValueOrDbNull(body.Materials, "Mercury");
+        row["Technetium"] = GetDictValueOrDbNull(body.Materials, "Technetium");
+        row["Polonium"] = GetDictValueOrDbNull(body.Materials, "Polonium");
         Bodies.Rows.Add(row);
     }
 
@@ -458,7 +486,25 @@ public class BulkWriter
         await Task.CompletedTask;
     }
 
-    private async Task AddStationEconomies(Station station)
+    private async Task AddStationCommoditiesToDataTable(Market? market, Station station)
+    {
+        if (market?.Commodities == null)
+            return;
+
+        foreach (var commodity in market.Commodities)
+        {
+            var row = StationCommodities.NewRow();
+            row["StationId"] = station.Id;
+            row["CommodityId"] = ValueOrDbNull(await CommodityAccess.GetId(commodity.Name, commodity.Category));
+            row["Demand"] = ValueOrDbNull(commodity.Demand);
+            row["Supply"] = ValueOrDbNull(commodity.Supply);
+            row["BuyPrice"] = ValueOrDbNull(commodity.BuyPrice);
+            row["SellPrice"] = ValueOrDbNull(commodity.SellPrice);
+            StationCommodities.Rows.Add(row);
+        }
+    }
+
+    private async Task AddStationEconomiesToDataTable(Station station)
     {
         if (station.Economies != null)
         {
@@ -473,7 +519,7 @@ public class BulkWriter
         }
     }
 
-    private async Task AddStationServices(Station station)
+    private async Task AddStationServicesToDataTable(Station station)
     {
         if (station.Services != null)
         {
@@ -495,6 +541,11 @@ public class BulkWriter
         if (hasPrefix)
         {
             ringName = ring.Name!.Substring(body.Name!.Length);
+        }
+
+        if (ringName != null && ringName.Length > 32)
+        {
+            ringName = ringName[..32];
         }
 
         if (ring.Id64 == null)
@@ -587,9 +638,23 @@ public class BulkWriter
         return null;
     }
 
+    private dynamic GetDictValueOrDbNull<T>(Dictionary<string, T>? dict, string key)
+    {
+        if (dict != null && dict.TryGetValue(key, out var value))
+        {
+            return ValueOrDbNull(value);
+        }
+        return DBNull.Value;
+    }
+
     private dynamic ValueOrDbNull(object? value)
     {
         return value ?? DBNull.Value;
+    }
+
+    public void Discard()
+    {
+
     }
 
     public async Task WriteSolarSystems()
@@ -643,6 +708,9 @@ public class BulkWriter
 
             bulkCopy.DestinationTableName = "Station";
             await bulkCopy.WriteToServerAsync(Stations);
+
+            bulkCopy.DestinationTableName = "StationCommodities";
+            await bulkCopy.WriteToServerAsync(StationCommodities);
 
             bulkCopy.DestinationTableName = "StationEconomies";
             await bulkCopy.WriteToServerAsync(StationEconomies);

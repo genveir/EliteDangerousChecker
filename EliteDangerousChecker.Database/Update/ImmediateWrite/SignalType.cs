@@ -21,7 +21,7 @@ public static class SignalTypeAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "SignalType");
+        Items = await IdAndNameTableAccess.GetItems<SignalType>(tableName: "SignalType");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<SignalType>(tableName: "SignalType", id, value);

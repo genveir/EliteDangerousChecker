@@ -21,7 +21,7 @@ public static class LuminosityAccess
 
     private static async Task RefreshItems()
     {
-        Items = await IdAndNameTableAccess.GetItems<Allegiance>(tableName: "Luminosity");
+        Items = await IdAndNameTableAccess.GetItems<Luminosity>(tableName: "Luminosity");
     }
 
     private static async Task AddItem(long id, string value) => await IdAndNameTableAccess.AddItem<Luminosity>(tableName: "Luminosity", id, value);
