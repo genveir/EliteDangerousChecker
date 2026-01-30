@@ -283,15 +283,28 @@ create table Ring (
 create table BodySignalType (
 	BodyId bigint not null,
 	SignalTypeId bigint not null,
-	Number int not null)
+	Number int not null);
 
 alter table BodySignalType add constraint PK_BodySignalType primary key (BodyId, SignalTypeId);
 
 create table BodySignalGenus (
 	BodyId bigint not null,
-	SignalGenusId bigint not null)
+	SignalGenusId bigint not null);
 
 alter table BodySignalGenus add constraint PK_BodySignalGenus primary key (BodyId, SignalGenusId);
+
+create table RingSignalType (
+	RingId bigint not null,
+	SignalTypeId bigint not null,
+	Number int not null);
+
+alter table RingSignalType add constraint PK_RingSignalType primary key (RingId, SignalTypeId);
+
+create table RingSignalGenus (
+	RingId bigint not null,
+	SignalGenusId bigint not null);
+
+alter table RingSignalGenus add constraint PK_RingSignalGenus primary key (RingId, SignalGenusId);
 
 -- Foreign Keys
 
@@ -352,6 +365,18 @@ alter table SectorPrefix add constraint FK_SectorPrefix_SectorPrefixWord foreign
 
 alter table Ring add constraint FK_Ring_Body foreign key (BodyId) references Body (Id);
 alter table Ring add constraint FK_Ring_RingType foreign key (RingTypeId) references RingType (Id);
+
+alter table BodySignalType add constraint FK_BodySignalType_Body foreign key (BodyId) references Body (Id);
+alter table BodySignalType add constraint FK_BodySignalType_SignalType foreign key (SignalTypeId) references SignalType (Id);
+
+alter table BodySignalGenus add constraint FK_BodySignalGenus_Body foreign key (BodyId) references Body (Id);
+alter table BodySignalGenus add constraint FK_BodySignalGenus_SignalGenus foreign key (SignalGenusId) references SignalGenus (Id);
+
+alter table RingSignalType add constraint FK_RingSignalType_Ring foreign key (RingId) references Ring (Id);
+alter table RingSignalType add constraint FK_RingSignalType_SignalType foreign key (SignalTypeId) references SignalType (Id);
+
+alter table RingSignalGenus add constraint FK_RingSignalGenus_Ring foreign key (RingId) references Ring (Id);
+alter table RingSignalGenus add constraint FK_RingSignalGenus_SignalGenus foreign key (SignalGenusId) references SignalGenus (Id);
 
 -- Indexes
 

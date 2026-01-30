@@ -26,6 +26,8 @@ public class BulkWriter
     DataTable BodySignalTypes { get; set; }
     DataTable BodySignalGenuses { get; set; }
 
+    DataTable RingSignalTypes { get; set; }
+    DataTable RingSignalGenuses { get; set; }
 
     DataTable Stations { get; set; }
     DataTable StationEconomies { get; set; }
@@ -54,6 +56,8 @@ public class BulkWriter
         Rings = DataTables.SetupRingsDataTable();
         BodySignalTypes = DataTables.SetupBodySignalTypesDataTable();
         BodySignalGenuses = DataTables.SetupBodySignalGenusesDataTable();
+        RingSignalTypes = DataTables.SetupRingSignalTypesDataTable();
+        RingSignalGenuses = DataTables.SetupRingSignalGenusesDataTable();
         Stations = DataTables.SetupStationsDataTable();
         StationEconomies = DataTables.SetupStationEconomiesDataTable();
         StationServices = DataTables.SetupStationServicesDataTable();
@@ -206,6 +210,18 @@ public class BulkWriter
             foreach (var ring in body.Rings)
             {
                 await AddRingToDataTable(ring, body);
+
+                if (ring.Signals != null)
+                {
+                    foreach (var signalType in ring.Signals.SignalTypes ?? [])
+                    {
+                        await AddRingSignalTypeToDataTable(ring, signalType);
+                    }
+                    foreach (var signalGenus in ring.Signals.Genuses ?? [])
+                    {
+                        await AddRingSignalGenusToDataTable(ring, signalGenus);
+                    }
+                }
             }
         }
 
@@ -498,6 +514,23 @@ public class BulkWriter
         Rings.Rows.Add(row);
     }
 
+    private async Task AddRingSignalTypeToDataTable(Ring Ring, KeyValuePair<string, int> signalType)
+    {
+        var row = RingSignalTypes.NewRow();
+        row["RingId"] = Ring.Id64;
+        row["SignalTypeId"] = ValueOrDbNull(await SignalTypeAccess.GetId(signalType.Key));
+        row["Number"] = ValueOrDbNull(signalType.Value);
+        RingSignalTypes.Rows.Add(row);
+    }
+
+    private async Task AddRingSignalGenusToDataTable(Ring Ring, string genus)
+    {
+        var row = RingSignalGenuses.NewRow();
+        row["RingId"] = Ring.Id64;
+        row["SignalGenusId"] = ValueOrDbNull(await SignalGenusAccess.GetId(genus));
+        RingSignalGenuses.Rows.Add(row);
+    }
+
     private async Task AddFaction(Faction faction)
     {
         if (faction.Name == null || FactionNameToId.ContainsKey(faction.Name))
@@ -583,6 +616,12 @@ public class BulkWriter
 
             bulkCopy.DestinationTableName = "BodySignalGenus";
             await bulkCopy.WriteToServerAsync(BodySignalGenuses);
+
+            bulkCopy.DestinationTableName = "RingSignalType";
+            await bulkCopy.WriteToServerAsync(RingSignalTypes);
+
+            bulkCopy.DestinationTableName = "RingSignalGenus";
+            await bulkCopy.WriteToServerAsync(RingSignalGenuses);
 
             bulkCopy.DestinationTableName = "Faction";
             await bulkCopy.WriteToServerAsync(Factions);

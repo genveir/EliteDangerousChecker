@@ -214,4 +214,21 @@ internal static class DataTables
         table.Columns.Add("SignalGenusId", typeof(long));
         return table;
     }
+
+    public static DataTable SetupRingSignalTypesDataTable()
+    {
+        DataTable table = new DataTable();
+        table.Columns.Add("RingId", typeof(long));
+        table.Columns.Add("SignalTypeId", typeof(long));
+        table.Columns.Add("Number", typeof(int));
+        return table;
+    }
+
+    public static DataTable SetupRingSignalGenusesDataTable()
+    {
+        DataTable table = new DataTable();
+        table.Columns.Add("RingId", typeof(long));
+        table.Columns.Add("SignalGenusId", typeof(long));
+        return table;
+    }
 }
