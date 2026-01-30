@@ -1,4 +1,97 @@
-﻿begin transaction
+﻿use [master];
+GO
+EXEC msdb.dbo.sp_delete_database_backuphistory @database_name = N'Elite'
+GO
+ALTER DATABASE [Elite] SET  SINGLE_USER WITH ROLLBACK IMMEDIATE
+GO
+DROP DATABASE [Elite]
+GO
+
+CREATE DATABASE [Elite]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'Elite', FILENAME = N'D:\EliteDb\Elite.mdf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'Elite_log', FILENAME = N'D:\EliteDb\Elite_log.ldf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
+ WITH LEDGER = OFF
+GO
+ALTER DATABASE [Elite] SET COMPATIBILITY_LEVEL = 160
+GO
+ALTER DATABASE [Elite] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [Elite] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [Elite] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [Elite] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [Elite] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [Elite] SET AUTO_CLOSE OFF 
+GO
+ALTER DATABASE [Elite] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [Elite] SET AUTO_CREATE_STATISTICS ON(INCREMENTAL = OFF)
+GO
+ALTER DATABASE [Elite] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [Elite] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [Elite] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [Elite] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [Elite] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [Elite] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [Elite] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [Elite] SET  DISABLE_BROKER 
+GO
+ALTER DATABASE [Elite] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [Elite] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [Elite] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [Elite] SET READ_COMMITTED_SNAPSHOT OFF 
+GO
+ALTER DATABASE [Elite] SET  READ_WRITE 
+GO
+ALTER DATABASE [Elite] SET RECOVERY FULL 
+GO
+ALTER DATABASE [Elite] SET  MULTI_USER 
+GO
+ALTER DATABASE [Elite] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [Elite] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [Elite] SET DELAYED_DURABILITY = DISABLED 
+GO
+USE [Elite]
+GO
+ALTER DATABASE SCOPED CONFIGURATION SET LEGACY_CARDINALITY_ESTIMATION = Off;
+GO
+ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET LEGACY_CARDINALITY_ESTIMATION = Primary;
+GO
+ALTER DATABASE SCOPED CONFIGURATION SET MAXDOP = 0;
+GO
+ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET MAXDOP = PRIMARY;
+GO
+ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SNIFFING = On;
+GO
+ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET PARAMETER_SNIFFING = Primary;
+GO
+ALTER DATABASE SCOPED CONFIGURATION SET QUERY_OPTIMIZER_HOTFIXES = Off;
+GO
+ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET QUERY_OPTIMIZER_HOTFIXES = Primary;
+GO
+USE [Elite]
+GO
+IF NOT EXISTS (SELECT name FROM sys.filegroups WHERE is_default=1 AND name = N'PRIMARY') ALTER DATABASE [Elite] MODIFY FILEGROUP [PRIMARY] DEFAULT
+GO
+
 
 create table Allegiance (Id bigint primary key, Name nvarchar(32) not null);
 create table AtmosphereType (Id bigint primary key, Name nvarchar(64) not null);
@@ -206,7 +299,7 @@ alter table Body add constraint FK_Body_ReserveLevel foreign key (ReserveLevelId
 alter table Body add constraint FK_Body_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
 
 alter table Station add constraint FK_Station_ControllingFaction foreign key (ControllingFactionId) references Faction (Id);
-alter table Station add constraint FK_Station_ControllingFactionState foreign key (ControllingFactionState) references FactionState (Id);
+alter table Station add constraint FK_Station_ControllingFactionState foreign key (ControllingFactionStateId) references FactionState (Id);
 alter table Station add constraint FK_Station_PrimaryEconomy foreign key (PrimaryEconomyId) references Economy (Id);
 alter table Station add constraint FK_Station_Government foreign key (GovernmentId) references Government (Id);
 alter table Station add constraint FK_Station_StationType foreign key (StationTypeId) references StationType (Id);
@@ -235,5 +328,6 @@ create index IX_SolarSystem_ControllingPower on SolarSystem (ControllingPowerId)
 create index IX_SolarSystemPower_Power on SolarSystemPower (PowerId);
 
 create index IX_Ring_RingType on Ring (RingTypeId)
+create index IX_Ring_Body on Ring (BodyId);
 
-commit transaction
+create index IX_Body_SolarSystem on Body (SolarSystemId);
