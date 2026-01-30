@@ -18,10 +18,10 @@ internal static class DataTables
         table.Columns.Add("Population", typeof(long));
         table.Columns.Add("BodyCount", typeof(int));
         table.Columns.Add("ControllingFactionId", typeof(long));
-        table.Columns.Add("Date", typeof(string));
-        table.Columns.Add("PowerStateTimestamp", typeof(string));
-        table.Columns.Add("PowersTimestamp", typeof(string));
-        table.Columns.Add("ControllingPowerTimestamp", typeof(string));
+        table.Columns.Add("Date", typeof(long));
+        table.Columns.Add("PowerStateTimestamp", typeof(long));
+        table.Columns.Add("PowersTimestamp", typeof(long));
+        table.Columns.Add("ControllingPowerTimestamp", typeof(long));
         table.Columns.Add("ControllingPowerId", typeof(long));
         table.Columns.Add("PowerStateId", typeof(long));
         table.Columns.Add("PowerStateControlProgress", typeof(double));
@@ -51,8 +51,8 @@ internal static class DataTables
         var table = new DataTable();
         table.Columns.Add("Id", typeof(long));
         table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("Allegiance", typeof(string));
-        table.Columns.Add("Government", typeof(string));
+        table.Columns.Add("AllegianceId", typeof(long));
+        table.Columns.Add("GovernmentId", typeof(long));
 
         return table;
     }
@@ -117,7 +117,7 @@ internal static class DataTables
         DataTable table = new DataTable();
         table.Columns.Add("Id", typeof(long));
         table.Columns.Add("Name", typeof(string));
-        table.Columns.Add("UpdateTime", typeof(string));
+        table.Columns.Add("UpdateTime", typeof(long));
         table.Columns.Add("RealName", typeof(string));
         table.Columns.Add("ControllingFactionId", typeof(long));
         table.Columns.Add("ControllingFactionStateId", typeof(long));
@@ -129,11 +129,11 @@ internal static class DataTables
         table.Columns.Add("LargePads", typeof(int));
         table.Columns.Add("MediumPads", typeof(int));
         table.Columns.Add("SmallPads", typeof(int));
-        table.Columns.Add("MarketUpdateTime", typeof(string));
+        table.Columns.Add("MarketUpdateTime", typeof(long));
         table.Columns.Add("CarrierDockingAccessId", typeof(long));
         table.Columns.Add("CarrierName", typeof(string));
-        table.Columns.Add("ShipyardUpdateTime", typeof(string));
-        table.Columns.Add("OutfittingUpdateTime", typeof(string));
+        table.Columns.Add("ShipyardUpdateTime", typeof(long));
+        table.Columns.Add("OutfittingUpdateTime", typeof(long));
         table.Columns.Add("AllegianceId", typeof(long));
         table.Columns.Add("Latitude", typeof(double));
         table.Columns.Add("Longitude", typeof(double));

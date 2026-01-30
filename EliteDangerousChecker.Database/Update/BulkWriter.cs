@@ -202,10 +202,10 @@ public class BulkWriter
         row["Population"] = solarSystem.Population ?? 0;
         row["BodyCount"] = solarSystem.BodyCount ?? 0;
         row["ControllingFactionId"] = ValueOrDbNull(solarSystem.ControllingFaction != null ? FactionNameToId[solarSystem.ControllingFaction.Name!] : null);
-        row["Date"] = ValueOrDbNull(solarSystem.Date);
-        row["PowerStateTimestamp"] = ValueOrDbNull(solarSystem.Timestamps?.PowerState);
-        row["PowersTimestamp"] = ValueOrDbNull(solarSystem.Timestamps?.Powers);
-        row["ControllingPowerTimestamp"] = ValueOrDbNull(solarSystem.Timestamps?.ControllingPower);
+        row["Date"] = ValueOrDbNull(OffsetToUnix(solarSystem.Date));
+        row["PowerStateTimestamp"] = ValueOrDbNull(OffsetToUnix(solarSystem.Timestamps?.PowerState));
+        row["PowersTimestamp"] = ValueOrDbNull(OffsetToUnix(solarSystem.Timestamps?.Powers));
+        row["ControllingPowerTimestamp"] = ValueOrDbNull(OffsetToUnix(solarSystem.Timestamps?.ControllingPower));
         row["ControllingPowerId"] = ValueOrDbNull(await PowerAccess.GetId(solarSystem.ControllingPower));
         row["PowerStateId"] = ValueOrDbNull(await PowerStateAccess.GetId(solarSystem.PowerState));
         row["PowerStateControlProgress"] = ValueOrDbNull(solarSystem.PowerStateControlProgress ?? 0);
@@ -312,10 +312,10 @@ public class BulkWriter
         row["AtmosphereTypeId"] = ValueOrDbNull(await AtmosphereTypeAccess.GetId(body.AtmosphereType));
         row["TerraformingStateId"] = ValueOrDbNull(await TerraformingStateAccess.GetId(body.TerraformingState));
         row["ReserveLevelId"] = ValueOrDbNull(await ReserveLevelAccess.GetId(body.ReserveLevel));
-        row["UpdateTime"] = ValueOrDbNull(body.UpdateTime);
-        row["DistanceToArrivalTimestamp"] = ValueOrDbNull(body.Timestamps?.DistanceToArrival);
-        row["MeanAnomalyTimestamp"] = ValueOrDbNull(body.Timestamps?.MeanAnomaly);
-        row["AscendingNodeTimestamp"] = ValueOrDbNull(body.Timestamps?.AscendingNode);
+        row["UpdateTime"] = ValueOrDbNull(OffsetToUnix(body.UpdateTime));
+        row["DistanceToArrivalTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.DistanceToArrival));
+        row["MeanAnomalyTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.MeanAnomaly));
+        row["AscendingNodeTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.AscendingNode));
         row["SolarSystemId"] = solarSystem.Id64;
         row["SolarSystemNameIsPrefix"] = hasPrefix;
         Bodies.Rows.Add(row);
@@ -349,7 +349,7 @@ public class BulkWriter
 
         row["Id"] = station.Id;
         row["Name"] = ValueOrDbNull(station.Name);
-        row["UpdateTime"] = ValueOrDbNull(station.UpdateTime);
+        row["UpdateTime"] = ValueOrDbNull(OffsetToUnix(station.UpdateTime));
         row["RealName"] = ValueOrDbNull(station.RealName);
         row["ControllingFactionId"] = ValueOrDbNull(station.ControllingFaction != null ? FactionNameToId[station.ControllingFaction] : null);
         row["ControllingFactionStateId"] = ValueOrDbNull(await FactionStateAccess.GetId(station.ControllingFactionState));
@@ -361,11 +361,11 @@ public class BulkWriter
         row["LargePads"] = ValueOrDbNull(station.LandingPads?.Large ?? 0);
         row["MediumPads"] = ValueOrDbNull(station.LandingPads?.Medium ?? 0);
         row["SmallPads"] = ValueOrDbNull(station.LandingPads?.Small ?? 0);
-        row["MarketUpdateTime"] = ValueOrDbNull(station.Market?.UpdateTime);
+        row["MarketUpdateTime"] = ValueOrDbNull(OffsetToUnix(station.Market?.UpdateTime));
         row["CarrierDockingAccessId"] = ValueOrDbNull(await CarrierDockingAccessAccess.GetId(station.CarrierDockingAccess));
         row["CarrierName"] = ValueOrDbNull(station.CarrierName);
-        row["ShipyardUpdateTime"] = ValueOrDbNull(station.Shipyard?.UpdateTime);
-        row["OutfittingUpdateTime"] = ValueOrDbNull(station.Outfitting?.UpdateTime);
+        row["ShipyardUpdateTime"] = ValueOrDbNull(OffsetToUnix(station.Shipyard?.UpdateTime));
+        row["OutfittingUpdateTime"] = ValueOrDbNull(OffsetToUnix(station.Outfitting?.UpdateTime));
         row["AllegianceId"] = ValueOrDbNull(await AllegianceAccess.GetId(station.Allegiance));
         row["Latitude"] = ValueOrDbNull(station.Latitude);
         row["Longitude"] = ValueOrDbNull(station.Longitude);
@@ -445,8 +445,8 @@ public class BulkWriter
         var row = Factions.NewRow();
         row["Id"] = nextFactionId;
         row["Name"] = faction.Name;
-        row["Allegiance"] = ValueOrDbNull(await AllegianceAccess.GetId(faction.Allegiance));
-        row["Government"] = ValueOrDbNull(await GovernmentAccess.GetId(faction.Government));
+        row["AllegianceId"] = ValueOrDbNull(await AllegianceAccess.GetId(faction.Allegiance));
+        row["GovernmentId"] = ValueOrDbNull(await GovernmentAccess.GetId(faction.Government));
         Factions.Rows.Add(row);
 
         FactionNameToId[faction.Name] = nextFactionId;
@@ -462,6 +462,18 @@ public class BulkWriter
         row["Influence"] = faction.Influence ?? 0;
         row["FactionStateId"] = ValueOrDbNull(await FactionStateAccess.GetId(faction.State));
         SolarSystemFactions.Rows.Add(row);
+    }
+
+    private long? OffsetToUnix(string? offset)
+    {
+        if (offset == null)
+            return null;
+
+        if (DateTimeOffset.TryParse(offset, out var dto))
+        {
+            return dto.ToUnixTimeSeconds();
+        }
+        return null;
     }
 
     private dynamic ValueOrDbNull(object? value)
