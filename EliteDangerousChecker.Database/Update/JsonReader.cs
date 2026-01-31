@@ -43,10 +43,10 @@ public sealed class JsonReader : IDisposable
     {
         var json = await reader.ReadLineAsync();
 
-        if (json == null || json.StartsWith(']'))
+        if (json == null || json.StartsWith(']') || json.StartsWith('['))
         {
             errorFileWriter.WriteLine(json);
-            return new(null, "json was null or started with closing bracket", []);
+            return new(null, "json was null or started with bracket", []);
         }
 
         if (json.EndsWith(','))

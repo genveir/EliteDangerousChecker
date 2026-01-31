@@ -587,6 +587,11 @@ public class BulkWriter
         if (faction.Name == null || FactionNameToId.ContainsKey(faction.Name))
             return;
 
+        if (faction.Name.Length > 64)
+        {
+            faction.Name = faction.Name[..64];
+        }
+
         var row = Factions.NewRow();
         row["Id"] = nextFactionId;
         row["Name"] = faction.Name;
@@ -652,13 +657,10 @@ public class BulkWriter
         return value ?? DBNull.Value;
     }
 
-    public void Discard()
+    public async Task WriteSolarSystems(bool writeToUpdateTables)
     {
+        var schema = writeToUpdateTables ? "upd" : "dbo";
 
-    }
-
-    public async Task WriteSolarSystems()
-    {
         try
         {
             var count = SolarSystems.Rows.Count;
@@ -670,55 +672,55 @@ public class BulkWriter
 
             using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction);
 
-            bulkCopy.DestinationTableName = "Body";
+            bulkCopy.DestinationTableName = $"{schema}.Body";
             await bulkCopy.WriteToServerAsync(Bodies);
 
-            bulkCopy.DestinationTableName = "Ring";
+            bulkCopy.DestinationTableName = $"{schema}.Ring";
             await bulkCopy.WriteToServerAsync(Rings);
 
-            bulkCopy.DestinationTableName = "BodySignalType";
+            bulkCopy.DestinationTableName = $"{schema}.BodySignalType";
             await bulkCopy.WriteToServerAsync(BodySignalTypes);
 
-            bulkCopy.DestinationTableName = "BodySignalGenus";
+            bulkCopy.DestinationTableName = $"{schema}.BodySignalGenus";
             await bulkCopy.WriteToServerAsync(BodySignalGenuses);
 
-            bulkCopy.DestinationTableName = "RingSignalType";
+            bulkCopy.DestinationTableName = $"{schema}.RingSignalType";
             await bulkCopy.WriteToServerAsync(RingSignalTypes);
 
-            bulkCopy.DestinationTableName = "RingSignalGenus";
+            bulkCopy.DestinationTableName = $"{schema}.RingSignalGenus";
             await bulkCopy.WriteToServerAsync(RingSignalGenuses);
 
-            bulkCopy.DestinationTableName = "Faction";
+            bulkCopy.DestinationTableName = $"{schema}.Faction";
             await bulkCopy.WriteToServerAsync(Factions);
 
-            bulkCopy.DestinationTableName = "SolarSystem";
+            bulkCopy.DestinationTableName = $"{schema}.SolarSystem";
             await bulkCopy.WriteToServerAsync(SolarSystems);
 
-            bulkCopy.DestinationTableName = "SectorPrefix";
+            bulkCopy.DestinationTableName = $"{schema}.SectorPrefix";
             await bulkCopy.WriteToServerAsync(SectorPrefixes);
 
-            bulkCopy.DestinationTableName = "SolarSystemFaction";
+            bulkCopy.DestinationTableName = $"{schema}.SolarSystemFaction";
             await bulkCopy.WriteToServerAsync(SolarSystemFactions);
 
-            bulkCopy.DestinationTableName = "SolarSystemPower";
+            bulkCopy.DestinationTableName = $"{schema}.SolarSystemPower";
             await bulkCopy.WriteToServerAsync(SolarSystemPowers);
 
-            bulkCopy.DestinationTableName = "SolarSystemPowerConflictProgress";
+            bulkCopy.DestinationTableName = $"{schema}.SolarSystemPowerConflictProgress";
             await bulkCopy.WriteToServerAsync(SolarSystemPowerConflictProgress);
 
-            bulkCopy.DestinationTableName = "Station";
+            bulkCopy.DestinationTableName = $"{schema}.Station";
             await bulkCopy.WriteToServerAsync(Stations);
 
-            bulkCopy.DestinationTableName = "StationCommodities";
+            bulkCopy.DestinationTableName = $"{schema}.StationCommodities";
             await bulkCopy.WriteToServerAsync(StationCommodities);
 
-            bulkCopy.DestinationTableName = "StationEconomies";
+            bulkCopy.DestinationTableName = $"{schema}.StationEconomies";
             await bulkCopy.WriteToServerAsync(StationEconomies);
 
-            bulkCopy.DestinationTableName = "StationServices";
+            bulkCopy.DestinationTableName = $"{schema}.StationServices";
             await bulkCopy.WriteToServerAsync(StationServices);
 
-            bulkCopy.DestinationTableName = "StationsMappedToPlaceholderFaction";
+            bulkCopy.DestinationTableName = $"{schema}.StationsMappedToPlaceholderFaction";
             await bulkCopy.WriteToServerAsync(StationsMappedToPlaceholderFaction);
 
             transaction.Commit();

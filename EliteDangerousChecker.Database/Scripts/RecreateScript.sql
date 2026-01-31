@@ -127,8 +127,8 @@ create table VolcanismType (Id bigint primary key, Name nvarchar(32) not null);
 create table Faction (
 	Id bigint primary key,
 	Name nvarchar(64) not null,
-	AllegianceId bigint not null,
-	GovernmentId bigint not null);
+	AllegianceId bigint,
+	GovernmentId bigint);
 
 create table SolarSystem (
 	Id bigint primary key,
@@ -293,7 +293,7 @@ alter table StationServices add constraint PK_StationServices primary key (Stati
 
 create table StationsMappedToPlaceholderFaction (
 	StationId bigint not null,
-	FactionName nvarchar(64) not null);
+	FactionName nvarchar(128) not null);
 
 create table SectorPrefix (
 	SolarSystemId bigint not null,
@@ -431,5 +431,256 @@ create index IX_Ring_Body on Ring (BodyId);
 
 create index IX_Body_SolarSystem on Body (SolarSystemId);
 
+create index IX_Station_SolarSystem on Station (SolarSystemId);
+
 create index IX_StationCommodities_CommodityBuy on StationCommodities (CommodityId, BuyPrice);
 create index IX_StationCommodities_CommoditySell on StationCommodities (CommodityId, SellPrice);
+
+-- Update tables
+go
+
+create schema upd;
+go
+
+drop proc if exists RecreateUpdateTables;
+go
+
+create proc RecreateUpdateTables as
+begin
+
+drop table if exists upd.RingSignalGenus;
+drop table if exists upd.RingSignalType;
+drop table if exists upd.BodySignalGenus;
+drop table if exists upd.BodySignalType;
+drop table if exists upd.Ring;
+drop table if exists upd.SectorPrefix;
+drop table if exists upd.StationsMappedToPlaceholderFaction;
+drop table if exists upd.StationServices;
+drop table if exists upd.StationEconomies;
+drop table if exists upd.StationCommodities;
+drop table if exists upd.Station;
+drop table if exists upd.Body;
+drop table if exists upd.SolarSystemPowerConflictProgress;
+drop table if exists upd.SolarSystemPower;
+drop table if exists upd.SolarSystemFaction;
+drop table if exists upd.SolarSystem;
+drop table if exists upd.Faction;
+
+create table upd.Faction (
+	Id bigint primary key,
+	Name nvarchar(64) not null,
+	AllegianceId bigint,
+	GovernmentId bigint);
+
+create table upd.SolarSystem (
+	Id bigint primary key,
+	X int,
+	Y int,
+	Z int,
+	AllegianceId bigint,
+	GovernmentId bigint,
+	PrimaryEconomyId bigint,
+	SecondaryEconomyId bigint,
+	SecurityId bigint,
+	Population bigint,
+	BodyCount int,
+	ControllingFactionId bigint,
+	Date bigint,
+	PowerStateTimestamp bigint,
+	PowersTimestamp bigint,
+	ControllingPowerTimestamp bigint,
+	ControllingPowerId bigint,
+	PowerStateId bigint,
+	PowerStateControlProgress float,
+	PowerStateReinforcement float,
+	PowerStateUndermining float,
+	SectorPostfixId bigint,
+	SectorSuffixId bigint);
+
+create table upd.SolarSystemFaction (
+	SolarSystemId bigint not null,
+	FactionId bigint not null,
+	Influence float not null,
+	FactionStateId bigint not null);
+
+alter table upd.SolarSystemFaction add constraint PK_SolarSystemFaction primary key (SolarSystemId, FactionId);
+
+create table upd.SolarSystemPower (
+	SolarSystemId bigint not null,
+	PowerId bigint not null);
+
+alter table upd.SolarSystemPower add constraint PK_SolarSystemPower primary key (SolarSystemId, PowerId);
+
+create table upd.SolarSystemPowerConflictProgress (
+	SolarSystemId bigint not null,
+	PowerId bigint not null,
+	Progress float not null);
+
+alter table upd.SolarSystemPowerConflictProgress add constraint PK_SolarSystemPowerConflictProgress primary key (SolarSystemId, PowerId);
+
+create table upd.Body (
+	Id bigint primary key,
+	BodyId int,
+	Name nvarchar(16),
+	BodyTypeId bigint,
+	BodySubTypeId bigint,
+	DistanceToArrival float,
+	Mainstar bit,
+	Age int,
+	SpectralClassId bigint,
+	LuminosityId bigint,
+	AbsoluteMagnitude float,
+	SolarMasses float,
+	SurfaceTemperature float,
+	RotationalPeriod float,
+	RotationalPeriodTidallyLocked bit,
+	AxialTilt float,
+	OrbitalPeriod float,
+	SemiMajorAxis float,
+	OrbitalEccentricity float,
+	OrbitalInclination float,
+	ArgOfPeriapsis float,
+	MeanAnomaly float,
+	AscendingNode float,
+	IsLandable bit,
+	Gravity float,
+	EarthMasses float,
+	Radius float,
+	SurfacePressure float,
+	VolcanismTypeId bigint,
+	AtmosphereTypeId bigint,
+	TerraformingStateId bigint,
+	ReserveLevelId bigint,
+	UpdateTime bigint,
+	DistanceToArrivalTimestamp bigint,
+	MeanAnomalyTimestamp bigint,
+	AscendingNodeTimestamp bigint,
+	SolarSystemId bigint,
+	SolarSystemNameIsPrefix bit,
+	SignalsUpdateTime bigint,
+	Carbon float,
+	Iron float,
+	Nickel float,
+	Niobium float,
+	Phosphorus float,
+	Sulphur float,
+	Tellurium float,
+	Tungsten float,
+	Vanadium float,
+	Zinc float,
+	Zirconium float,
+	Germanium float,
+	Manganese float,
+	Molybdenum float,
+	Selenium float,
+	Yttrium float,
+	Cadmium float,
+	Ruthenium float,
+	Arsenic float,
+	Antimony float,
+	Chromium float,
+	Tin float,
+	Mercury float,
+	Technetium float,
+	Polonium float);
+
+create table upd.Station (
+	Id bigint primary key,
+	Name nvarchar(128),
+	UpdateTime bigint,
+	RealName nvarchar(64),
+	ControllingFactionId bigint,
+	ControllingFactionStateId bigint,
+	DistanceToArrival float,
+	PrimaryEconomyId bigint,
+	GovernmentId bigint,
+	StationTypeId bigint,
+	StateId bigint,
+	LargePads int,
+	MediumPads int,
+	SmallPads int,
+	MarketUpdateTime bigint,
+	CarrierDockingAccessId bigint,
+	CarrierName nvarchar(64),
+	ShipyardUpdateTime bigint,
+	OutfittingUpdateTime bigint,
+	AllegianceId bigint,
+	Latitude float,
+	Longitude float,
+	BodyId bigint,
+	SolarSystemId bigint);
+
+create table upd.StationCommodities (
+	StationId bigint not null,
+	CommodityId bigint not null,
+	Demand int,
+	Supply int,
+	BuyPrice int,
+	SellPrice int);
+
+alter table upd.StationCommodities add constraint PK_StationCommodities primary key (StationId, CommodityId);
+
+create table upd.StationEconomies (
+	StationId bigint not null,
+	EconomyId bigint not null,
+	Proportion float);
+
+alter table upd.StationEconomies add constraint PK_StationEconomies primary key (StationId, EconomyId);
+
+create table upd.StationServices (
+	StationId bigint not null,
+	ServiceId bigint not null)
+
+alter table upd.StationServices add constraint PK_StationServices primary key (StationId, ServiceId)
+
+create table upd.StationsMappedToPlaceholderFaction (
+	StationId bigint not null,
+	FactionName nvarchar(128) not null);
+
+create table upd.SectorPrefix (
+	SolarSystemId bigint not null,
+	Sequence int not null,
+	SectorPrefixWordId bigint,
+	SectorPrefixNumber int,
+	StartWithDash bit,
+	StartWithJ bit);
+
+alter table upd.SectorPrefix add constraint PK_SectorPrefix primary key (SolarSystemId, Sequence);
+
+create table upd.Ring (
+	Id bigint primary key,
+	Name nvarchar(32),
+	BodyNameIsPrefix bit,
+	BodyId bigint,
+	RingTypeId bigint,
+	Mass float,
+	InnerRadius float,
+	OuterRadius float);
+
+create table upd.BodySignalType (
+	BodyId bigint not null,
+	SignalTypeId bigint not null,
+	Number int not null);
+
+alter table upd.BodySignalType add constraint PK_BodySignalType primary key (BodyId, SignalTypeId);
+
+create table upd.BodySignalGenus (
+	BodyId bigint not null,
+	SignalGenusId bigint not null);
+
+alter table upd.BodySignalGenus add constraint PK_BodySignalGenus primary key (BodyId, SignalGenusId);
+
+create table upd.RingSignalType (
+	RingId bigint not null,
+	SignalTypeId bigint not null,
+	Number int not null);
+
+alter table upd.RingSignalType add constraint PK_RingSignalType primary key (RingId, SignalTypeId);
+
+create table upd.RingSignalGenus (
+	RingId bigint not null,
+	SignalGenusId bigint not null);
+
+alter table upd.RingSignalGenus add constraint PK_RingSignalGenus primary key (RingId, SignalGenusId);
+
+end
