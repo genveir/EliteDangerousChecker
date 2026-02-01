@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace EliteDangerousChecker.Database.Update.DumpModel;
 public class SolarSystem
@@ -72,44 +71,4 @@ public class SolarSystem
 
     [JsonPropertyName("powers")]
     public List<string>? Powers { get; set; }
-
-    [JsonExtensionData]
-    public Dictionary<string, JsonElement>? Unmapped { get; set; }
-
-    public string[] UnmappedFieldsRecursive()
-    {
-        var unmappedFields = new List<string>();
-
-        if (Unmapped != null && Unmapped.Count != 0)
-        {
-            unmappedFields.AddRange(Unmapped.Keys);
-        }
-
-        Coordinates?.UnmappedFieldsRecursive(unmappedFields, "coords.");
-        ControllingFaction?.UnmappedFieldsRecursive(unmappedFields, "controllingFaction.");
-
-        if (Factions != null)
-        {
-            for (int n = 0; n < Factions.Count; n++) { Factions[n].UnmappedFieldsRecursive(unmappedFields, $"factions[{n}]."); }
-        }
-
-        if (Bodies != null)
-        {
-            for (int n = 0; n < Bodies.Count; n++) { Bodies[n].UnmappedFieldsRecursive(unmappedFields, $"bodies[{n}]."); }
-        }
-
-        if (Stations != null)
-        {
-            for (int n = 0; n < Stations.Count; n++) { Stations[n].UnmappedFieldsRecursive(unmappedFields, $"Stations[{n}]."); }
-        }
-
-        if (PowerConflictProgress != null)
-        {
-            for (int n = 0; n < PowerConflictProgress.Count; n++) { PowerConflictProgress[n].UnmappedFieldsRecursive(unmappedFields, $"powerConflictProgress[{n}]."); }
-        }
-
-        Timestamps?.UnmappedFieldsRecursive(unmappedFields, "timestamps.");
-
-        return [.. unmappedFields];
-    }
 }

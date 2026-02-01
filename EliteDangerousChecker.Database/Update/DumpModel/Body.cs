@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace EliteDangerousChecker.Database.Update.DumpModel;
 
@@ -133,34 +132,4 @@ public class Body
 
     [JsonPropertyName("timestamps")]
     public BodyTimeStamps? Timestamps { get; set; }
-
-    [JsonExtensionData]
-    public Dictionary<string, JsonElement>? Unmapped { get; set; }
-
-    public void UnmappedFieldsRecursive(List<string> unmappedFields, string prefix)
-    {
-        if (Unmapped != null && Unmapped.Count != 0)
-        {
-            unmappedFields.AddRange(Unmapped.Keys.Select(s => prefix + s));
-        }
-
-        Signals?.UnmappedFieldsRecursive(unmappedFields, prefix + "signals.");
-
-        if (Rings != null)
-        {
-            for (int n = 0; n < Rings.Count; n++) { Rings[n].UnmappedFieldsRecursive(unmappedFields, prefix + $"rings[{n}]."); }
-        }
-
-        if (Stations != null)
-        {
-            for (int n = 0; n < Stations.Count; n++) { Stations[n].UnmappedFieldsRecursive(unmappedFields, prefix + $"stations[{n}]."); }
-        }
-
-        if (Belts != null)
-        {
-            for (int n = 0; n < Belts.Count; n++) { Belts[n].UnmappedFieldsRecursive(unmappedFields, prefix + $"belts[{n}]."); }
-        }
-
-        Timestamps?.UnmappedFieldsRecursive(unmappedFields, prefix + "timestamps.");
-    }
 }
