@@ -8,30 +8,20 @@
             select 1
             from 
 				SolarSystemPower ssp
-				join Power p on p.Id = ssp.PowerId
             where
                 ssp.SolarSystemId = ss.Id
-                and p.Name = 'Jerome Archer'
-        )
-        and exists
-        (
-            select 1
-            from 
-				Power p
-            where
-                p.Id = ss.ControllingPowerId
-                and p.Name <> 'Jerome Archer'
-        )
+                and ssp.PowerId = 7 -- Jerome Archer
+        ) 
+        and ss.ControllingPowerId <> 7 -- Not controlled by Jerome Archer
         and exists
         (
             select 1
             from 
 				Body b
 				join Ring r on r.BodyId = b.Id
-				join RingType rt on rt.Id = r.RingTypeId
             where
                 b.SolarSystemId = ss.Id
-                and rt.Name = 'Rocky'
+                and r.RingTypeId = 2 -- Rocky Rings
         )
 ),
 EligibleStations as
@@ -58,7 +48,7 @@ StationCommodityPrices as
     from 
 		EligibleStations es
 		cross join RockyRingCommodities rrc
-		left join StationCommodities sc on sc.StationId = es.StationId and sc.CommodityId = rrc.CommodityId
+		left join StationCommodities sc on sc.StationId = es.StationId and sc.CommodityId = rrc.CommodityId and demand > 20
 ),
 StationAverages as
 (
@@ -96,48 +86,64 @@ RankedStations as
         ) as rn
     from 
 		StationAverages
+),
+Top50Results AS (
+    select top (50)
+        rs.SolarSystemId,
+        st.Id as StationId,
+        st.Name as StationName,
+        dateadd(second, MarketUpdateTime, '1970-01-01') UpdateTime,
+        rs.AverageSellPrice,
+        rs.Alexandrite,
+        rs.AlexandriteDemand,
+        rs.Benitoite,
+        rs.BenitoiteDemand,
+        rs.Monazite,
+        rs.MonaziteDemand,
+        rs.Musgravite,
+        rs.MusgraviteDemand,
+        rs.Serendibite,
+        rs.SerendibiteDemand,
+        coalesce(
+            (select se.Proportion 
+             from StationEconomies se 
+             join Economy e on e.Id = se.EconomyId 
+             where se.StationId = st.Id and e.Name = 'Refinery'), 
+            0.0
+        ) as RefineryProportion,
+        e.Name PrimaryEconomy,
+        cr.Result,
+        cr.Timestamp,
+        b.Name as BodyName
+    from RankedStations rs
+    join Station st on st.Id = rs.StationId
+    left join Economy e on e.Id = st.PrimaryEconomyId
+    left join CheckResult cr on cr.StationId = st.Id
+    left join Body b on b.Id = st.BodyId
+    order by
+        rs.AverageSellPrice desc, 
+        UpdateTime desc
 )
-select top (50)
+select
     ssn.Name as SolarSystemName,
-	st.Id as StationId,
-    st.Name  as StationName,
-	DATEADD(SECOND, MarketUpdateTime, '1970-01-01') UpdateTime,
-    rs.AverageSellPrice,
-    rs.Alexandrite,
-	rs.AlexandriteDemand,
-    rs.Benitoite,
-	rs.BenitoiteDemand,
-    rs.Monazite,
-	rs.MonaziteDemand,
-    rs.Musgravite,
-	rs.MusgraviteDemand,
-    rs.Serendibite,
-	rs.SerendibiteDemand,
-    coalesce(
-        (select se.Proportion 
-         from StationEconomies se 
-         join Economy e on e.Id = se.EconomyId 
-         where se.StationId = st.Id and e.Name = 'Refinery'), 
-        0.0
-    ) as RefineryProportion,
-	e.Name PrimaryEconomy,
-	cr.Result,
-	cr.Timestamp,
-	b.Name
-
-from 
-	RankedStations rs
-	join Station st on st.Id = rs.StationId
-	cross apply dbo.GetSectorPrefixName(rs.SolarSystemId) ssn
-	left join Economy e on e.Id = st.PrimaryEconomyId
-	left join CheckResult cr on cr.StationId = st.Id
-	left join Body b on b.Id = st.BodyId
-where 
-	AlexandriteDemand > 20
-	and BenitoiteDemand > 20
-	and MonaziteDemand > 20
-	and MusgraviteDemand > 20
-	and SerendibiteDemand > 20
-order by 
-	rs.AverageSellPrice desc, 
-	UpdateTime desc;
+    t50.StationId,
+    t50.StationName,
+    t50.UpdateTime,
+    t50.AverageSellPrice,
+    t50.Alexandrite,
+    t50.AlexandriteDemand,
+    t50.Benitoite,
+    t50.BenitoiteDemand,
+    t50.Monazite,
+    t50.MonaziteDemand,
+    t50.Musgravite,
+    t50.MusgraviteDemand,
+    t50.Serendibite,
+    t50.SerendibiteDemand,
+    t50.RefineryProportion,
+    t50.PrimaryEconomy,
+    t50.Result,
+    t50.Timestamp,
+    t50.BodyName
+from Top50Results t50
+cross apply dbo.GetSectorPrefixName(t50.SolarSystemId) ssn;
