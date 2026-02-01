@@ -1,13 +1,4 @@
-﻿use [master];
-GO
-EXEC msdb.dbo.sp_delete_database_backuphistory @database_name = N'Elite'
-GO
-ALTER DATABASE [Elite] SET  SINGLE_USER WITH ROLLBACK IMMEDIATE
-GO
-DROP DATABASE [Elite]
-GO
-
-CREATE DATABASE [Elite]
+﻿CREATE DATABASE [Elite]
  CONTAINMENT = NONE
  ON  PRIMARY 
 ( NAME = N'Elite', FILENAME = N'D:\EliteDb\Elite.mdf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
@@ -428,6 +419,7 @@ create index IX_SolarSystemPowerConflictProgress_Power on SolarSystemPowerConfli
 
 create index IX_Ring_RingType on Ring (RingTypeId)
 create index IX_Ring_Body on Ring (BodyId);
+create index IX_Ring_RingType_Body on Ring (RingTypeId, BodyId) include (Id) where RingTypeId = 2;
 
 create index IX_Body_SolarSystem on Body (SolarSystemId);
 
@@ -435,6 +427,9 @@ create index IX_Station_SolarSystem on Station (SolarSystemId);
 
 create index IX_StationCommodities_CommodityBuy on StationCommodities (CommodityId, BuyPrice);
 create index IX_StationCommodities_CommoditySell on StationCommodities (CommodityId, SellPrice);
+create index IX_StationCommodities_Demand_Commodity on StationCommodities (Demand, CommodityId, StationId) include (SellPrice) where Demand > 20;
+
+create index IX_Station_Eligibility on Station (PrimaryEconomyId, SolarSystemId) include (Id, MediumPads, LargePads);
 
 -- Update tables
 go
