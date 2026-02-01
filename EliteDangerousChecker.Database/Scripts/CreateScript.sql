@@ -431,6 +431,49 @@ create index IX_StationCommodities_Demand_Commodity on StationCommodities (Deman
 
 create index IX_Station_Eligibility on Station (PrimaryEconomyId, SolarSystemId) include (Id, MediumPads, LargePads);
 
+-- Name function
+
+go
+create or alter function dbo.GetSectorPrefixName
+(
+    @SolarSystemId bigint
+)
+returns table
+as
+return
+(
+    select
+        Prefix
+        + coalesce('-' + ssuf.Name, '')
+        + coalesce(' ' + spost.Name, '') as Name
+    from (
+        select
+            string_agg(
+                case
+                    when sp.Sequence = 1 then
+                        case when sp.StartWithJ = 1 then 'J' else '' end +
+                        coalesce(w.Name, convert(nvarchar(32), sp.SectorPrefixNumber))
+                    else
+                        case when sp.StartWithDash = 1 then '-' else ' ' end +
+                        case when sp.StartWithJ = 1 then 'J' else '' end +
+                        coalesce(w.Name, convert(nvarchar(32), sp.SectorPrefixNumber))
+                end,
+                ''
+            ) within group (order by sp.Sequence) as Prefix,
+            sp.SolarSystemId
+        from SectorPrefix sp
+        left join SectorPrefixWord w
+            on w.Id = sp.SectorPrefixWordId
+        where sp.SolarSystemId = @SolarSystemId
+        group by sp.SolarSystemId
+    ) agg
+    inner join SolarSystem s on s.Id = agg.SolarSystemId
+    left join SectorSuffix ssuf on ssuf.Id = s.SectorSuffixId
+    left join SectorPostfix spost on spost.Id = s.SectorPostfixId
+);
+go
+
+
 -- Update tables
 go
 
