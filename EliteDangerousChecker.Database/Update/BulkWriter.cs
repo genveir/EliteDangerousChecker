@@ -168,6 +168,9 @@ public class BulkWriter
             foreach (var station in solarSystem.Stations)
             {
                 await AddStationToDataTable(station, solarSystem);
+                await AddStationCommoditiesToDataTable(station.Market, station);
+                await AddStationEconomiesToDataTable(station);
+                await AddStationServicesToDataTable(station);
             }
         }
     }
