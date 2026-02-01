@@ -5,29 +5,26 @@ namespace EliteDangerousChecker.Database.Update;
 
 public interface IJsonReaderFactory
 {
-    JsonReader CreateJsonReader(string fileName, string errorFileName);
+    JsonReader CreateJsonReader(string fileName);
 }
 
 public class JsonReaderFactory : IJsonReaderFactory
 {
-    public JsonReader CreateJsonReader(string fileName, string errorFileName)
+    public JsonReader CreateJsonReader(string fileName)
     {
         var reader = new StreamReader(new FileStream(fileName, FileMode.Open));
-        var errorWriter = new StreamWriter(new FileStream(errorFileName, FileMode.Create));
 
-        return new JsonReader(reader, errorWriter);
+        return new JsonReader(reader);
     }
 }
 
 public sealed class JsonReader : IDisposable
 {
     private readonly StreamReader reader;
-    private readonly StreamWriter errorFileWriter;
 
-    public JsonReader(StreamReader reader, StreamWriter errorFileWriter)
+    public JsonReader(StreamReader reader)
     {
         this.reader = reader;
-        this.errorFileWriter = errorFileWriter;
     }
 
     public bool HasMore()
@@ -42,7 +39,6 @@ public sealed class JsonReader : IDisposable
 
         if (json == null || json.StartsWith(']') || json.StartsWith('['))
         {
-            errorFileWriter.WriteLine(json);
             return new(null, "json was null or started with bracket", []);
         }
 
@@ -53,13 +49,11 @@ public sealed class JsonReader : IDisposable
 
         if (system == null)
         {
-            errorFileWriter.WriteLine(json);
             return new(null, "system deserialized to null", []);
         }
 
         if (solarSystemIds.Contains(system.Id64))
         {
-            errorFileWriter.WriteLine(json);
             return new(null, $"duplicate system id {system.Id64}", []);
         }
 
@@ -79,7 +73,6 @@ public sealed class JsonReader : IDisposable
     public void Dispose()
     {
         reader.Dispose();
-        errorFileWriter.Dispose();
     }
 
     public record Result(SolarSystem? System, string? Errored, string[] WasUnmappable);

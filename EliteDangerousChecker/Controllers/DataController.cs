@@ -102,9 +102,7 @@ public class DataController : ControllerBase
         var dashSubFolderString = subFolder == null ? "" : $"-{subFolder}";
 
         using var jsonReader = jsonReaderFactory.CreateJsonReader(
-            fileName: @$"e:\temp\elite\{subFolderString}\batch_{batchToProcess}.json",
-            errorFileName: @$"d:\temp\elite\errors{dashSubFolderString}_{batchToProcess}.jsonx",
-            unmappedFileName: @$"d:\temp\elite\unmapped{dashSubFolderString}_{batchToProcess}.jsonx");
+            fileName: @$"e:\temp\elite\{subFolderString}\batch_{batchToProcess}.json");
 
         var bulkWriter = new BulkWriter();
         await bulkWriter.Initialize();
@@ -116,9 +114,7 @@ public class DataController : ControllerBase
     private async Task InsertBatch(Dictionary<string, List<string>> results, int batchToProcess)
     {
         using var jsonReader = jsonReaderFactory.CreateJsonReader(
-            fileName: @$"e:\temp\elite\batch_{batchToProcess}.json",
-            errorFileName: @$"d:\temp\elite\errors_{batchToProcess}.jsonx",
-            unmappedFileName: @$"d:\temp\elite\unmapped_{batchToProcess}.jsonx");
+            fileName: @$"e:\temp\elite\batch_{batchToProcess}.json");
 
         var bulkWriter = new BulkWriter();
         await bulkWriter.Initialize();

@@ -23,9 +23,7 @@ public class FindSystemController : ControllerBase
             var dashSubFolderString = subFolder == null ? "" : $"-{subFolder}";
 
             using var jsonReader = jsonReaderFactory.CreateJsonReader(
-                fileName: @$"e:\temp\elite\{subFolderString}\batch_{batchToProcess}.json",
-                errorFileName: @$"d:\temp\elite\errors{dashSubFolderString}_{batchToProcess}.jsonx",
-                unmappedFileName: @$"d:\temp\elite\unmapped{dashSubFolderString}_{batchToProcess}.jsonx");
+                fileName: @$"e:\temp\elite\{subFolderString}\batch_{batchToProcess}.json");
 
             var systemName = System.Net.WebUtility.UrlDecode(urlEncodenSystemName);
 
