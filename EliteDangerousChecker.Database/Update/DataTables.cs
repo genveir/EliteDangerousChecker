@@ -189,8 +189,8 @@ internal static class DataTables
         DataTable table = new DataTable();
         table.Columns.Add("StationId", typeof(long));
         table.Columns.Add("CommodityId", typeof(long));
-        table.Columns.Add("Supply", typeof(int));
         table.Columns.Add("Demand", typeof(int));
+        table.Columns.Add("Supply", typeof(int));
         table.Columns.Add("BuyPrice", typeof(int));
         table.Columns.Add("SellPrice", typeof(int));
         return table;
