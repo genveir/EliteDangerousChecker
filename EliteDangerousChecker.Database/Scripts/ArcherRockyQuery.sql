@@ -10,9 +10,9 @@
 				SolarSystemPower ssp
             where
                 ssp.SolarSystemId = ss.Id
-                and ssp.PowerId = 7 -- Jerome Archer
+                and ssp.PowerId = 8 -- Jerome Archer
         ) 
-        and ss.ControllingPowerId <> 7 -- Not controlled by Jerome Archer
+        and ss.ControllingPowerId <> 8 -- Not controlled by Jerome Archer
         and exists
         (
             select 1
@@ -58,17 +58,17 @@ StationAverages as
 
         avg(scp.EffectiveSellPrice) as AverageSellPrice,
 
-        max(case when scp.CommodityId = 11 then scp.EffectiveSellPrice end) as Alexandrite,
-        max(case when scp.CommodityId = 41 then scp.EffectiveSellPrice end) as Benitoite,
-        max(case when scp.CommodityId = 212 then scp.EffectiveSellPrice end) as Monazite,
-        max(case when scp.CommodityId = 217 then scp.EffectiveSellPrice end) as Musgravite,
-        max(case when scp.CommodityId = 287 then scp.EffectiveSellPrice end) as Serendibite,
+        max(case when scp.CommodityId = 96 then scp.EffectiveSellPrice end) as Alexandrite,
+        max(case when scp.CommodityId = 119 then scp.EffectiveSellPrice end) as Benitoite,
+        max(case when scp.CommodityId = 254 then scp.EffectiveSellPrice end) as Monazite,
+        max(case when scp.CommodityId = 258 then scp.EffectiveSellPrice end) as Musgravite,
+        max(case when scp.CommodityId = 308 then scp.EffectiveSellPrice end) as Serendibite,
 
-		max(case when scp.CommodityId = 11 then scp.Demand end) as AlexandriteDemand,
-		max(case when scp.CommodityId = 41 then scp.Demand end) as BenitoiteDemand,
-		max(case when scp.CommodityId = 212 then scp.Demand end) as MonaziteDemand,
-		max(case when scp.CommodityId = 217 then scp.Demand end) as MusgraviteDemand,
-		max(case when scp.CommodityId = 287 then scp.Demand end) as SerendibiteDemand
+		max(case when scp.CommodityId = 96 then scp.Demand end) as AlexandriteDemand,
+		max(case when scp.CommodityId = 119 then scp.Demand end) as BenitoiteDemand,
+		max(case when scp.CommodityId = 254 then scp.Demand end) as MonaziteDemand,
+		max(case when scp.CommodityId = 258 then scp.Demand end) as MusgraviteDemand,
+		max(case when scp.CommodityId = 308 then scp.Demand end) as SerendibiteDemand
     from 
 		StationCommodityPrices scp
     group by
@@ -112,13 +112,10 @@ Top50Results AS (
             0.0
         ) as RefineryProportion,
         e.Name PrimaryEconomy,
-        cr.Result,
-        cr.Timestamp,
         b.Name as BodyName
     from RankedStations rs
     join Station st on st.Id = rs.StationId
     left join Economy e on e.Id = st.PrimaryEconomyId
-    left join CheckResult cr on cr.StationId = st.Id
     left join Body b on b.Id = st.BodyId
     order by
         rs.AverageSellPrice desc, 
@@ -142,8 +139,6 @@ select
     t50.SerendibiteDemand,
     t50.RefineryProportion,
     t50.PrimaryEconomy,
-    t50.Result,
-    t50.Timestamp,
     t50.BodyName
 from Top50Results t50
 cross apply dbo.GetSectorPrefixName(t50.SolarSystemId) ssn;

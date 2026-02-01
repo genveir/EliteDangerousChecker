@@ -147,7 +147,7 @@ public class DataController : ControllerBase
 
             recordIndex++;
 
-            if (bulkWriter.RowCount == 100001)
+            if (bulkWriter.RowCount == 100002)
             {
                 if (doUpdate)
                     await Updater.RecreateUpdateTables();
