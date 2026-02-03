@@ -7,10 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.Api",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.Database", "EliteDangerousChecker.Database\EliteDangerousChecker.Database.csproj", "{B3378F3E-6B8A-4954-82A3-4C640618AAEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.ArdentApi", "EliteDangerousChecker.ArdentApi\EliteDangerousChecker.ArdentApi.csproj", "{7A7CFF93-550D-4304-9052-E99E403E95A9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.Core", "EliteDangerousChecker.Core\EliteDangerousChecker.Core.csproj", "{55EE14F5-4046-4896-82B8-4950FEAA7F60}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{B3378F3E-6B8A-4954-82A3-4C640618AAEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3378F3E-6B8A-4954-82A3-4C640618AAEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3378F3E-6B8A-4954-82A3-4C640618AAEF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7A7CFF93-550D-4304-9052-E99E403E95A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7A7CFF93-550D-4304-9052-E99E403E95A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7A7CFF93-550D-4304-9052-E99E403E95A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7A7CFF93-550D-4304-9052-E99E403E95A9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55EE14F5-4046-4896-82B8-4950FEAA7F60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55EE14F5-4046-4896-82B8-4950FEAA7F60}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55EE14F5-4046-4896-82B8-4950FEAA7F60}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55EE14F5-4046-4896-82B8-4950FEAA7F60}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

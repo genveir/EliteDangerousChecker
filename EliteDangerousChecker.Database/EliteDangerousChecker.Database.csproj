@@ -11,8 +11,4 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\EliteDangerousChecker.Core\EliteDangerousChecker.Core.csproj" />
-  </ItemGroup>
-
 </Project>

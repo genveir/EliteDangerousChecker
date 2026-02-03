@@ -1,4 +1,3 @@
-using EliteDangerousChecker.Core;
 using EliteDangerousChecker.Database;
 
 namespace EliteDangerousChecker.Api
@@ -14,7 +13,6 @@ namespace EliteDangerousChecker.Api
             builder.Services.AddControllers();
             builder.Services
                 .AddHttpClient()
-                .AddCore()
                 .AddDatabase();
 
             var app = builder.Build();
