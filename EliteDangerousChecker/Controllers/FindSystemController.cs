@@ -1,4 +1,5 @@
-﻿using EliteDangerousChecker.Database.Update;
+﻿using EliteDangerousChecker.Database;
+using EliteDangerousChecker.Database.Update;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EliteDangerousChecker.Api.Controllers;
@@ -32,6 +33,43 @@ public class FindSystemController : ControllerBase
                 var result = await jsonReader.ReadSystem();
 
                 if (result.System != null && result.System.Name == systemName)
+                {
+                    return Ok(new { batch = batchToProcess, system = result.System });
+                }
+            }
+        }
+
+        return NotFound();
+    }
+
+    [HttpGet("api/findsystem/uninserted/{batchToStart}/{batchToEnd}")]
+    public async Task<IActionResult> FindFirstUninserted(int batchToStart, int batchToEnd) =>
+        await FindFirstUninserted(batchToStart, batchToEnd, subFolder: null);
+
+    [HttpGet("api/findsystem/uninserted/{batchToStart}/{batchToEnd}/{subFolder}")]
+    public async Task<IActionResult> FindFirstUninserted(int batchToStart, int batchToEnd, string? subFolder)
+    {
+        for (int batchToProcess = batchToStart; batchToProcess < batchToEnd; batchToProcess++)
+        {
+            Console.WriteLine("Reading batch " + batchToProcess);
+
+            var subFolderString = subFolder == null ? "" : $@"{subFolder}\";
+            var dashSubFolderString = subFolder == null ? "" : $"-{subFolder}";
+            using var jsonReader = jsonReaderFactory.CreateJsonReader(
+                fileName: @$"e:\temp\elite\{subFolderString}\batch_{batchToProcess}.json");
+
+            using var connection = DbAccess.GetOpenConnection();
+
+            if (jsonReader.HasMore())
+            {
+                var result = await jsonReader.ReadSystem();
+
+                var command = connection.CreateCommand();
+                command.CommandText = "select Id from SolarSystem where Id = @Id64";
+                command.Parameters.AddWithValue("@Id64", result.System!.Id64);
+                var reader = await command.ExecuteReaderAsync();
+
+                if (!reader.HasRows)
                 {
                     return Ok(new { batch = batchToProcess, system = result.System });
                 }
