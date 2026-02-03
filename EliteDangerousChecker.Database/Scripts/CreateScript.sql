@@ -1,87 +1,7 @@
-﻿CREATE DATABASE [Elite]
- CONTAINMENT = NONE
- ON  PRIMARY 
-( NAME = N'Elite', FILENAME = N'D:\EliteDb\Elite.mdf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
- LOG ON 
-( NAME = N'Elite_log', FILENAME = N'D:\EliteDb\Elite_log.ldf' , SIZE = 8192KB , FILEGROWTH = 65536KB )
- WITH LEDGER = OFF
-GO
-ALTER DATABASE [Elite] SET COMPATIBILITY_LEVEL = 160
-GO
-ALTER DATABASE [Elite] SET ANSI_NULL_DEFAULT OFF 
-GO
-ALTER DATABASE [Elite] SET ANSI_NULLS OFF 
-GO
-ALTER DATABASE [Elite] SET ANSI_PADDING OFF 
-GO
-ALTER DATABASE [Elite] SET ANSI_WARNINGS OFF 
-GO
-ALTER DATABASE [Elite] SET ARITHABORT OFF 
-GO
-ALTER DATABASE [Elite] SET AUTO_CLOSE OFF 
-GO
-ALTER DATABASE [Elite] SET AUTO_SHRINK OFF 
-GO
-ALTER DATABASE [Elite] SET AUTO_CREATE_STATISTICS ON(INCREMENTAL = OFF)
-GO
-ALTER DATABASE [Elite] SET AUTO_UPDATE_STATISTICS ON 
-GO
-ALTER DATABASE [Elite] SET CURSOR_CLOSE_ON_COMMIT OFF 
-GO
-ALTER DATABASE [Elite] SET CURSOR_DEFAULT  GLOBAL 
-GO
-ALTER DATABASE [Elite] SET CONCAT_NULL_YIELDS_NULL OFF 
-GO
-ALTER DATABASE [Elite] SET NUMERIC_ROUNDABORT OFF 
-GO
-ALTER DATABASE [Elite] SET QUOTED_IDENTIFIER OFF 
-GO
-ALTER DATABASE [Elite] SET RECURSIVE_TRIGGERS OFF 
-GO
-ALTER DATABASE [Elite] SET  DISABLE_BROKER 
-GO
-ALTER DATABASE [Elite] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
-GO
-ALTER DATABASE [Elite] SET DATE_CORRELATION_OPTIMIZATION OFF 
-GO
-ALTER DATABASE [Elite] SET PARAMETERIZATION SIMPLE 
-GO
-ALTER DATABASE [Elite] SET READ_COMMITTED_SNAPSHOT OFF 
-GO
-ALTER DATABASE [Elite] SET  READ_WRITE 
-GO
-ALTER DATABASE [Elite] SET RECOVERY FULL 
-GO
-ALTER DATABASE [Elite] SET  MULTI_USER 
-GO
-ALTER DATABASE [Elite] SET PAGE_VERIFY CHECKSUM  
-GO
-ALTER DATABASE [Elite] SET TARGET_RECOVERY_TIME = 60 SECONDS 
-GO
-ALTER DATABASE [Elite] SET DELAYED_DURABILITY = DISABLED 
-GO
-USE [Elite]
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET LEGACY_CARDINALITY_ESTIMATION = Off;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET LEGACY_CARDINALITY_ESTIMATION = Primary;
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET MAXDOP = 0;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET MAXDOP = PRIMARY;
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SNIFFING = On;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET PARAMETER_SNIFFING = Primary;
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET QUERY_OPTIMIZER_HOTFIXES = Off;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET QUERY_OPTIMIZER_HOTFIXES = Primary;
-GO
-USE [Elite]
-GO
-IF NOT EXISTS (SELECT name FROM sys.filegroups WHERE is_default=1 AND name = N'PRIMARY') ALTER DATABASE [Elite] MODIFY FILEGROUP [PRIMARY] DEFAULT
-GO
+﻿create database Elite;
+go
+use Elite;
+go
 
 -- Text Tables
 
@@ -425,11 +345,13 @@ create index IX_Body_SolarSystem on Body (SolarSystemId);
 
 create index IX_Station_SolarSystem on Station (SolarSystemId);
 
-create index IX_StationCommodities_CommodityBuy on StationCommodities (CommodityId, BuyPrice);
-create index IX_StationCommodities_CommoditySell on StationCommodities (CommodityId, SellPrice);
 create index IX_StationCommodities_Demand_Commodity on StationCommodities (Demand, CommodityId, StationId) include (SellPrice) where Demand > 20;
+create index IX_StationCommodities_Station_Rocky on StationCommodities (StationId, Demand) include (CommodityId, SellPrice) where Demand > 20 and CommodityId in (96, 119, 254, 258, 308);
 
 create index IX_Station_Eligibility on Station (PrimaryEconomyId, SolarSystemId) include (Id, MediumPads, LargePads);
+
+create index IX_SectorPrefix_Numbers on SectorPrefix (Sequence, SectorPrefixNumber) include (StartWithDash, StartWithJ);
+create index IX_SectorPrefix_Word on SectorPrefix (Sequence, SectorPrefixWordId) include (StartWithDash, StartWithJ);
 
 -- Name function
 
@@ -450,7 +372,7 @@ return
         select
             string_agg(
                 case
-                    when sp.Sequence = 1 then
+                    when sp.Sequence = 0 then
                         case when sp.StartWithJ = 1 then 'J' else '' end +
                         coalesce(w.Name, convert(nvarchar(32), sp.SectorPrefixNumber))
                     else
@@ -472,6 +394,162 @@ return
     left join SectorPostfix spost on spost.Id = s.SectorPostfixId
 );
 go
+
+-- Merits view
+
+create view BestMerits as
+with EligibleSolarSystems as
+(
+    select ss.Id as SolarSystemId
+    from SolarSystem ss
+    where
+        exists
+        (
+            select 1
+            from 
+				SolarSystemPower ssp
+            where
+                ssp.SolarSystemId = ss.Id
+                and ssp.PowerId = 8 -- Jerome Archer
+        ) 
+        and ss.ControllingPowerId <> 8 -- Not controlled by Jerome Archer
+        and exists
+        (
+            select 1
+            from 
+				Body b
+				join Ring r on r.BodyId = b.Id
+            where
+                b.SolarSystemId = ss.Id
+                and r.RingTypeId = 2 -- Rocky Rings
+        )
+),
+EligibleStations as
+(
+    select
+        s.Id as StationId,
+        s.SolarSystemId
+    from 
+		Station s
+		join EligibleSolarSystems ess on ess.SolarSystemId = s.SolarSystemId
+    where
+		(s.MediumPads > 0 or s.LargePads > 0)
+		and s.PrimaryEconomyId <> 2
+        and (
+            select count(rrc.CommodityId)
+            from RockyRingCommodities rrc
+            join StationCommodities sc on sc.CommodityId = rrc.CommodityId
+            where sc.StationId = s.Id and sc.Demand > 20
+        ) = 5
+
+),
+StationCommodityPrices as
+(
+    select
+        es.StationId,
+        es.SolarSystemId,
+        rrc.CommodityId,
+        coalesce(sc.SellPrice, rrc.AverageSellPrice) as EffectiveSellPrice,
+		sc.Demand
+    from 
+		EligibleStations es		
+		join StationCommodities sc on sc.StationId = es.StationId
+        join RockyRingCommodities rrc on rrc.CommodityId = sc.CommodityId
+    where
+        sc.Demand > 20
+),
+StationAverages as
+(
+    select
+        StationId,
+        SolarSystemId,
+
+        avg(scp.EffectiveSellPrice) as AverageSellPrice,
+
+        max(case when scp.CommodityId = 96 then scp.EffectiveSellPrice end) as Alexandrite,
+        max(case when scp.CommodityId = 119 then scp.EffectiveSellPrice end) as Benitoite,
+        max(case when scp.CommodityId = 254 then scp.EffectiveSellPrice end) as Monazite,
+        max(case when scp.CommodityId = 258 then scp.EffectiveSellPrice end) as Musgravite,
+        max(case when scp.CommodityId = 308 then scp.EffectiveSellPrice end) as Serendibite,
+
+		max(case when scp.CommodityId = 96 then scp.Demand end) as AlexandriteDemand,
+		max(case when scp.CommodityId = 119 then scp.Demand end) as BenitoiteDemand,
+		max(case when scp.CommodityId = 254 then scp.Demand end) as MonaziteDemand,
+		max(case when scp.CommodityId = 258 then scp.Demand end) as MusgraviteDemand,
+		max(case when scp.CommodityId = 308 then scp.Demand end) as SerendibiteDemand
+    from 
+		StationCommodityPrices scp
+    group by
+        scp.StationId,
+        scp.SolarSystemId
+),
+RankedStations as
+(
+    select
+        *,
+        row_number() over
+        (
+            partition by SolarSystemId
+            order by AverageSellPrice desc
+        ) as rn
+    from 
+		StationAverages
+),
+Top50Results AS (
+    select top (50)
+        rs.SolarSystemId,
+        st.Id as StationId,
+        st.Name as StationName,
+        dateadd(second, MarketUpdateTime, '1970-01-01') UpdateTime,
+        rs.AverageSellPrice,
+        rs.Alexandrite,
+        rs.AlexandriteDemand,
+        rs.Benitoite,
+        rs.BenitoiteDemand,
+        rs.Monazite,
+        rs.MonaziteDemand,
+        rs.Musgravite,
+        rs.MusgraviteDemand,
+        rs.Serendibite,
+        rs.SerendibiteDemand,
+        coalesce(
+            (select se.Proportion 
+             from StationEconomies se 
+             join Economy e on e.Id = se.EconomyId 
+             where se.StationId = st.Id and e.Name = 'Refinery'), 
+            0.0
+        ) as RefineryProportion,
+        e.Name PrimaryEconomy,
+        b.Name as BodyName
+    from RankedStations rs
+    join Station st on st.Id = rs.StationId
+    left join Economy e on e.Id = st.PrimaryEconomyId
+    left join Body b on b.Id = st.BodyId
+    order by
+        rs.AverageSellPrice desc, 
+        UpdateTime desc
+)
+select
+    ssn.Name as SolarSystemName,
+    t50.StationId,
+    t50.StationName,
+    t50.UpdateTime,
+    t50.AverageSellPrice,
+    t50.Alexandrite,
+    t50.AlexandriteDemand,
+    t50.Benitoite,
+    t50.BenitoiteDemand,
+    t50.Monazite,
+    t50.MonaziteDemand,
+    t50.Musgravite,
+    t50.MusgraviteDemand,
+    t50.Serendibite,
+    t50.SerendibiteDemand,
+    t50.RefineryProportion,
+    t50.PrimaryEconomy,
+    t50.BodyName
+from Top50Results t50
+cross apply dbo.GetSectorPrefixName(t50.SolarSystemId) ssn;
 
 
 -- Update tables
