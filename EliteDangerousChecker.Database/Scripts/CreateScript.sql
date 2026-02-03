@@ -123,9 +123,9 @@ create table Faction (
 
 create table SolarSystem (
 	Id bigint primary key,
-	X int,
-	Y int,
-	Z int,
+	X float,
+	Y float,
+	Z float,
 	AllegianceId bigint,
 	GovernmentId bigint,
 	PrimaryEconomyId bigint,

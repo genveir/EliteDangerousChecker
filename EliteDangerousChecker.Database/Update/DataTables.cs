@@ -7,9 +7,9 @@ internal static class DataTables
     {
         var table = new DataTable();
         table.Columns.Add("Id", typeof(long));
-        table.Columns.Add("X", typeof(int));
-        table.Columns.Add("Y", typeof(int));
-        table.Columns.Add("Z", typeof(int));
+        table.Columns.Add("X", typeof(float));
+        table.Columns.Add("Y", typeof(float));
+        table.Columns.Add("Z", typeof(float));
         table.Columns.Add("AllegianceId", typeof(long));
         table.Columns.Add("GovernmentId", typeof(long));
         table.Columns.Add("PrimaryEconomyId", typeof(long));

@@ -5,11 +5,11 @@ namespace EliteDangerousChecker.Database.Update.DumpModel;
 public class Coordinate
 {
     [JsonPropertyName("x")]
-    public decimal X { get; set; }
+    public double X { get; set; }
 
     [JsonPropertyName("y")]
-    public decimal Y { get; set; }
+    public double Y { get; set; }
 
     [JsonPropertyName("z")]
-    public decimal Z { get; set; }
+    public double Z { get; set; }
 }
