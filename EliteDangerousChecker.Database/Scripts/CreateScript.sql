@@ -578,7 +578,28 @@ select
     t50.BodyName
 from Top50Results t50
 cross apply dbo.GetSectorPrefixName(t50.SolarSystemId) ssn;
+go
 
+create view CommodityProportions as
+with CommodityAmounts as
+(
+	select
+        cs.Commodityid,
+		sum(cs.Count) Count,
+        cast(sum(cs.Count) as float) / nullif(sum(sum(cs.Count)) over (), 0) as Proportion
+    from 
+		CommoditiesSold cs
+		join RockyRingCommodities rrc on rrc.Commodityid = cs.Commodityid
+    group by 
+		cs.commodityid
+)
+select
+	c.Name,
+	ca.Count,
+	ca.Proportion
+from
+	CommodityAmounts ca
+	join Commodity c on c.Id = ca.CommodityId
 
 -- Update tables
 go
