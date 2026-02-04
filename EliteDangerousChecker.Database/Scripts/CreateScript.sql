@@ -252,6 +252,19 @@ create table RingSignalGenus (
 
 alter table RingSignalGenus add constraint PK_RingSignalGenus primary key (RingId, SignalGenusId);
 
+create table RockyRingCommodities (
+	CommodityId bigint primary key,
+	AverageSellPrice int not null
+);
+
+create table CommoditiesSold (
+	Timestamp bigint not null,
+	StationId bigint not null,
+	CommodityId bigint not null,
+	Count int not null,
+	SellPrice int not null
+);
+
 -- Foreign Keys
 
 alter table Commodity add constraint FK_Commodity_CommodityCategory foreign key (CommodityCategoryId) references CommodityCategory (Id);
@@ -457,6 +470,17 @@ StationCommodityPrices as
         join RockyRingCommodities rrc on rrc.CommodityId = sc.CommodityId
     where
         sc.Demand > 20
+), 
+MineralProportions as
+(
+    select
+        cs.Commodityid,
+        cast(sum(cs.Count) as float) / nullif(sum(sum(cs.Count)) over (), 0) as Proportion
+    from 
+		commoditiessold cs
+		join rockyringcommodities rrc on rrc.commodityid = cs.commodityid
+    group by 
+		cs.commodityid
 ),
 StationAverages as
 (
@@ -464,7 +488,8 @@ StationAverages as
         StationId,
         SolarSystemId,
 
-        avg(scp.EffectiveSellPrice) as AverageSellPrice,
+        sum(scp.EffectiveSellPrice * mp.Proportion) as WeightedAverageSellPrice,
+		avg(scp.EffectiveSellPrice) as AverageSellPrice,
 
         max(case when scp.CommodityId = 96 then scp.EffectiveSellPrice end) as Alexandrite,
         max(case when scp.CommodityId = 119 then scp.EffectiveSellPrice end) as Benitoite,
@@ -479,6 +504,7 @@ StationAverages as
 		max(case when scp.CommodityId = 308 then scp.Demand end) as SerendibiteDemand
     from 
 		StationCommodityPrices scp
+		join MineralProportions mp on mp.CommodityId = scp.CommodityId
     group by
         scp.StationId,
         scp.SolarSystemId
@@ -490,7 +516,7 @@ RankedStations as
         row_number() over
         (
             partition by SolarSystemId
-            order by AverageSellPrice desc
+            order by WeightedAverageSellPrice desc
         ) as rn
     from 
 		StationAverages
@@ -501,7 +527,8 @@ Top50Results AS (
         st.Id as StationId,
         st.Name as StationName,
         dateadd(second, MarketUpdateTime, '1970-01-01') UpdateTime,
-        rs.AverageSellPrice,
+		rs.AverageSellPrice,
+        rs.WeightedAverageSellPrice,
         rs.Alexandrite,
         rs.AlexandriteDemand,
         rs.Benitoite,
@@ -526,7 +553,7 @@ Top50Results AS (
     left join Economy e on e.Id = st.PrimaryEconomyId
     left join Body b on b.Id = st.BodyId
     order by
-        rs.AverageSellPrice desc, 
+        rs.WeightedAverageSellPrice desc, 
         UpdateTime desc
 )
 select
@@ -534,7 +561,8 @@ select
     t50.StationId,
     t50.StationName,
     t50.UpdateTime,
-    t50.AverageSellPrice,
+	t50.AverageSellPrice,
+    t50.WeightedAverageSellPrice,
     t50.Alexandrite,
     t50.AlexandriteDemand,
     t50.Benitoite,

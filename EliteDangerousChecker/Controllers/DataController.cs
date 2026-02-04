@@ -1,4 +1,5 @@
-﻿using EliteDangerousChecker.Database.Update;
+﻿using EliteDangerousChecker.Database.Shared;
+using EliteDangerousChecker.Database.Spansh;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -12,10 +13,6 @@ public class DataController : ControllerBase
     {
         this.jsonReaderFactory = jsonReaderFactory;
     }
-
-    [HttpGet("api/update/test/{batchToProcess}")]
-    public async Task<IActionResult> ProcessSingle(int batchToProcess) =>
-        await ProcessNumber(batchToProcess, batchToProcess);
 
     [HttpGet("api/data/insert/{firstBatchToProcess}/{lastBatchToProcess}")]
     public async Task<IActionResult> ProcessNumber(int firstBatchToProcess, int lastBatchToProcess)
@@ -62,6 +59,20 @@ public class DataController : ControllerBase
     [HttpGet("api/data/update/{batchToProcess}")]
     public async Task<IActionResult> UpdateSingle(int batchToProcess) =>
         await UpdateNumberInFolder(batchToProcess, batchToProcess, null);
+
+    [HttpGet("api/data/update/{firstBatchToProcess}/max")]
+    public async Task<IActionResult> UpdateNumber(int firstBatchToProcess) =>
+        await UpdateNumberInFolder(firstBatchToProcess, null);
+
+    [HttpGet("api/data/update/{firstBatchToProcess}/max/{subFolder}")]
+    public async Task<IActionResult> UpdateNumberInFolder(int firstBatchToProgress, string? subFolder)
+    {
+        var lastBatch = Directory.GetFiles(@"e:\temp\elite\", "batch_*.json")
+            .Select(f => int.Parse(Path.GetFileName(f).Split(['_', '.'])[1]))
+            .Max();
+
+        return await UpdateNumberInFolder(firstBatchToProgress, lastBatch, subFolder);
+    }
 
     [HttpGet("api/data/update/{firstBatchToProcess}/{lastBatchToProcess}")]
     public async Task<IActionResult> UpdateNumber(int firstBatchToProcess, int lastBatchToProcess) =>

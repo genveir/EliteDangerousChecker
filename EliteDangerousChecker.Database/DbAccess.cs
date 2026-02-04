@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 
 namespace EliteDangerousChecker.Database;
-public static class DbAccess
+internal static class DbAccess
 {
     private const string ConnectionString = "Data Source=PEACE\\LOVELINESS;Initial Catalog=Elite;Integrated Security=True;TrustServerCertificate=True;";
 

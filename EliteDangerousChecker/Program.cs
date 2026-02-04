@@ -15,6 +15,8 @@ namespace EliteDangerousChecker.Api
                 .AddHttpClient()
                 .AddDatabase();
 
+            builder.Services.AddHostedService<JournalWatcherBackgroundService>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

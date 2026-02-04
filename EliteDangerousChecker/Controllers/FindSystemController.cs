@@ -1,5 +1,5 @@
-﻿using EliteDangerousChecker.Database;
-using EliteDangerousChecker.Database.Update;
+﻿using EliteDangerousChecker.Database.DirectQueries;
+using EliteDangerousChecker.Database.Spansh;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EliteDangerousChecker.Api.Controllers;
@@ -58,18 +58,13 @@ public class FindSystemController : ControllerBase
             using var jsonReader = jsonReaderFactory.CreateJsonReader(
                 fileName: @$"e:\temp\elite\{subFolderString}\batch_{batchToProcess}.json");
 
-            using var connection = DbAccess.GetOpenConnection();
-
             if (jsonReader.HasMore())
             {
                 var result = await jsonReader.ReadSystem();
 
-                var command = connection.CreateCommand();
-                command.CommandText = "select Id from SolarSystem where Id = @Id64";
-                command.Parameters.AddWithValue("@Id64", result.System!.Id64);
-                var reader = await command.ExecuteReaderAsync();
+                var exists = await GetSolarSystemExistsById.Execute(result.System!.Id64);
 
-                if (!reader.HasRows)
+                if (!exists)
                 {
                     return Ok(new { batch = batchToProcess, system = result.System });
                 }
