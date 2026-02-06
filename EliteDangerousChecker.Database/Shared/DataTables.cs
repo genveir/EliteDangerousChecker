@@ -30,6 +30,8 @@ internal static class DataTables
         table.Columns.Add("HasSectorName", typeof(bool));
         table.Columns.Add("SectorSuffixId", typeof(long));
         table.Columns.Add("SectorPostfixId", typeof(long));
+        table.Columns.Add("SolarSystemRegionId", typeof(long));
+        table.Columns.Add("SubSector", typeof(int));
 
         return table;
     }

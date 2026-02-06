@@ -10,7 +10,7 @@ internal class MarketUpdater
     {
         Console.WriteLine($"Starting market update");
 
-        using var reader = new StreamReader(new FileStream(MarketLocation, FileMode.Open));
+        using var reader = new StreamReader(new FileStream(MarketLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
         var json = await reader.ReadToEndAsync();
 

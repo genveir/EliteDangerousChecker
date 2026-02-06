@@ -91,10 +91,12 @@ WHEN MATCHED THEN UPDATE SET
     PowerStateReinforcement = source.PowerStateReinforcement,
     PowerStateUndermining = source.PowerStateUndermining,
     SectorPostfixId = source.SectorPostfixId,
-    SectorSuffixId = source.SectorSuffixId
+    SectorSuffixId = source.SectorSuffixId,
+    SolarSystemRegionId = source.SolarSystemRegionId,
+    SubSector = source.SubSector
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (Id, X, Y, Z, AllegianceId, GovernmentId, PrimaryEconomyId, SecondaryEconomyId, SecurityId, Population, BodyCount, ControllingFactionId, Date, PowerStateTimestamp, PowersTimestamp, ControllingPowerTimestamp, ControllingPowerId, PowerStateId, PowerStateControlProgress, PowerStateReinforcement, PowerStateUndermining, SectorPostfixId, SectorSuffixId)
-    VALUES (source.Id, source.X, source.Y, source.Z, source.AllegianceId, source.GovernmentId, source.PrimaryEconomyId, source.SecondaryEconomyId, source.SecurityId, source.Population, source.BodyCount, source.ControllingFactionId, source.Date, source.PowerStateTimestamp, source.PowersTimestamp, source.ControllingPowerTimestamp, source.ControllingPowerId, source.PowerStateId, source.PowerStateControlProgress, source.PowerStateReinforcement, source.PowerStateUndermining, source.SectorPostfixId, source.SectorSuffixId);";
+    INSERT (Id, X, Y, Z, AllegianceId, GovernmentId, PrimaryEconomyId, SecondaryEconomyId, SecurityId, Population, BodyCount, ControllingFactionId, Date, PowerStateTimestamp, PowersTimestamp, ControllingPowerTimestamp, ControllingPowerId, PowerStateId, PowerStateControlProgress, PowerStateReinforcement, PowerStateUndermining, SectorPostfixId, SectorSuffixId, SolarSystemRegionId, SubSector)
+    VALUES (source.Id, source.X, source.Y, source.Z, source.AllegianceId, source.GovernmentId, source.PrimaryEconomyId, source.SecondaryEconomyId, source.SecurityId, source.Population, source.BodyCount, source.ControllingFactionId, source.Date, source.PowerStateTimestamp, source.PowersTimestamp, source.ControllingPowerTimestamp, source.ControllingPowerId, source.PowerStateId, source.PowerStateControlProgress, source.PowerStateReinforcement, source.PowerStateUndermining, source.SectorPostfixId, source.SectorSuffixId, source.SolarSystemRegionId, source.SubSector);";
         using var conn = GetConnection();
         using var cmd = new SqlCommand(sql, conn);
         await cmd.ExecuteNonQueryAsync();

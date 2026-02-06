@@ -19,5 +19,13 @@ internal class FilesChangedHandler
             var journalUpdater = new JournalUpdate.JournalUpdater();
             await journalUpdater.UpdateFromJournal();
         }
+
+        var navRouteFileChanged = changedFiles.Any(f => f.EndsWith("NavRoute.json", StringComparison.OrdinalIgnoreCase));
+
+        if (navRouteFileChanged)
+        {
+            var navRouteUpdater = new NavRouteUpdate.NavRouteUpdater();
+            await navRouteUpdater.UpdateNavRoute();
+        }
     }
 }

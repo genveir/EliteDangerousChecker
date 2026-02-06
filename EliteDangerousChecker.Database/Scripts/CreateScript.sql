@@ -64,7 +64,9 @@ create table SolarSystem (
 	PowerStateReinforcement float,
 	PowerStateUndermining float,
 	SectorPostfixId bigint,
-	SectorSuffixId bigint);
+	SectorSuffixId bigint,
+	SolarSystemRegionId bigint,
+	SubSector int);
 
 create table SolarSystemFaction (
 	SolarSystemId bigint not null,
@@ -252,6 +254,15 @@ create table RingSignalGenus (
 
 alter table RingSignalGenus add constraint PK_RingSignalGenus primary key (RingId, SignalGenusId);
 
+create table SolarSystemRegion
+(
+	Id bigint not null primary key,
+	XSector int not null,
+	YSector int not null,
+	ZSector int not null);
+
+-- Custom tables
+
 create table RockyRingCommodities (
 	CommodityId bigint primary key,
 	AverageSellPrice int not null
@@ -263,6 +274,54 @@ create table CommoditiesSold (
 	CommodityId bigint not null,
 	Count int not null,
 	SellPrice int not null
+);
+
+create table TableCounts (
+    Timestamp bigint,
+    Allegiance int,
+    AtmosphereType int,
+    BodySubType int,
+    BodyType int,
+    CarrierDockingAccess int,
+    Commodity int,
+    CommodityCategory int,
+    Economy int,
+    FactionState int,
+    Government int,
+    Luminosity int,
+    Power int,
+    PowerState int,
+    ReserveLevel int,
+    RingType int,
+    SectorPostfix int,
+    SectorPrefixWord int,
+    SectorSuffix int,
+    Security int,
+    Service int,
+    SignalType int,
+    SignalGenus int,
+    SpectralClass int,
+    StationState int,
+    StationType int,
+    TerraformingState int,
+    VolcanismType int,
+    Faction int,
+    SolarSystem int,
+    SolarSystemFaction int,
+    SolarSystemPower int,
+    SolarSystemPowerConflictProgress int,
+    Body int,
+    Station int,
+    StationCommodities int,
+    StationEconomies int,
+    StationServices int,
+    StationsMappedToPlaceholderFaction int,
+    SectorPrefix int,
+    Ring int,
+    BodySignalType int,
+    BodySignalGenus int,
+    RingSignalType int,
+    RingSignalGenus int
 );
 
 -- Foreign Keys
@@ -580,6 +639,8 @@ from Top50Results t50
 cross apply dbo.GetSectorPrefixName(t50.SolarSystemId) ssn;
 go
 
+-- Commodity proportions view
+
 create view CommodityProportions as
 with CommodityAmounts as
 (
@@ -600,6 +661,111 @@ select
 from
 	CommodityAmounts ca
 	join Commodity c on c.Id = ca.CommodityId
+
+-- Row counts view
+
+go
+drop proc if exists InsertTableCounts;
+go
+
+create proc InsertTableCounts as
+begin
+    insert into TableCounts (
+        Timestamp,
+        Allegiance,
+        AtmosphereType,
+        BodySubType,
+        BodyType,
+        CarrierDockingAccess,
+        Commodity,
+        CommodityCategory,
+        Economy,
+        FactionState,
+        Government,
+        Luminosity,
+        Power,
+        PowerState,
+        ReserveLevel,
+        RingType,
+        SectorPostfix,
+        SectorPrefixWord,
+        SectorSuffix,
+        Security,
+        Service,
+        SignalType,
+        SignalGenus,
+        SpectralClass,
+        StationState,
+        StationType,
+        TerraformingState,
+        VolcanismType,
+        Faction,
+        SolarSystem,
+        SolarSystemFaction,
+        SolarSystemPower,
+        SolarSystemPowerConflictProgress,
+        Body,
+        Station,
+        StationCommodities,
+        StationEconomies,
+        StationServices,
+        StationsMappedToPlaceholderFaction,
+        SectorPrefix,
+        Ring,
+        BodySignalType,
+        BodySignalGenus,
+        RingSignalType,
+        RingSignalGenus
+    )
+    values (
+        datediff(second, '1970-01-01', sysutcdatetime()),
+        (select count(*) from Allegiance),
+        (select count(*) from AtmosphereType),
+        (select count(*) from BodySubType),
+        (select count(*) from BodyType),
+        (select count(*) from CarrierDockingAccess),
+        (select count(*) from Commodity),
+        (select count(*) from CommodityCategory),
+        (select count(*) from Economy),
+        (select count(*) from FactionState),
+        (select count(*) from Government),
+        (select count(*) from Luminosity),
+        (select count(*) from Power),
+        (select count(*) from PowerState),
+        (select count(*) from ReserveLevel),
+        (select count(*) from RingType),
+        (select count(*) from SectorPostfix),
+        (select count(*) from SectorPrefixWord),
+        (select count(*) from SectorSuffix),
+        (select count(*) from Security),
+        (select count(*) from Service),
+        (select count(*) from SignalType),
+        (select count(*) from SignalGenus),
+        (select count(*) from SpectralClass),
+        (select count(*) from StationState),
+        (select count(*) from StationType),
+        (select count(*) from TerraformingState),
+        (select count(*) from VolcanismType),
+        (select count(*) from Faction),
+        (select count(*) from SolarSystem),
+        (select count(*) from SolarSystemFaction),
+        (select count(*) from SolarSystemPower),
+        (select count(*) from SolarSystemPowerConflictProgress),
+        (select count(*) from Body),
+        (select count(*) from Station),
+        (select count(*) from StationCommodities),
+        (select count(*) from StationEconomies),
+        (select count(*) from StationServices),
+        (select count(*) from StationsMappedToPlaceholderFaction),
+        (select count(*) from SectorPrefix),
+        (select count(*) from Ring),
+        (select count(*) from BodySignalType),
+        (select count(*) from BodySignalGenus),
+        (select count(*) from RingSignalType),
+        (select count(*) from RingSignalGenus)
+    );
+end
+go
 
 -- Update tables
 go
@@ -660,7 +826,9 @@ create table upd.SolarSystem (
 	PowerStateReinforcement float,
 	PowerStateUndermining float,
 	SectorPostfixId bigint,
-	SectorSuffixId bigint);
+	SectorSuffixId bigint,
+	SolarSystemRegionId bigint,
+	SubSector int);
 
 create table upd.SolarSystemFaction (
 	SolarSystemId bigint not null,

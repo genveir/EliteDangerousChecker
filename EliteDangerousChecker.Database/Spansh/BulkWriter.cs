@@ -251,6 +251,8 @@ public class BulkWriter
         long? suffixId = suffix != null ? await SectorSuffixAccess.GetId(suffix) : null;
         long? postfixId = postfix != null ? await SectorPostfixAccess.GetId(postfix) : null;
 
+        int? subSector = CalculateSubSector(solarSystem.Coordinates?.X, solarSystem.Coordinates?.Y, solarSystem.Coordinates?.Z);
+
         var row = SolarSystems.NewRow();
         row["Id"] = solarSystem.Id64;
         row["X"] = ValueOrDbNull(solarSystem.Coordinates?.X);
@@ -275,8 +277,23 @@ public class BulkWriter
         row["PowerStateUndermining"] = ValueOrDbNull(solarSystem.PowerStateUndermining ?? 0);
         row["SectorSuffixId"] = ValueOrDbNull(suffixId);
         row["SectorPostfixId"] = ValueOrDbNull(postfixId);
+        row["SolarSystemRegionId"] = ValueOrDbNull(await SolarSystemRegionAccess.GetId(solarSystem.Coordinates?.X, solarSystem.Coordinates?.Y, solarSystem.Coordinates?.Z));
+        row["SubSector"] = ValueOrDbNull(subSector);
 
         SolarSystems.Rows.Add(row);
+    }
+
+    private int CalculateSubSector(double? x, double? y, double? z)
+    {
+        var sectorX = (int)Math.Floor((x ?? 0) / 100.0d);
+        var sectorY = (int)Math.Floor((y ?? 0) / 100.0d);
+        var sectorZ = (int)Math.Floor((z ?? 0) / 100.0d);
+
+        var subSectorX = (int)Math.Floor(((x ?? 0) - sectorX * 100) / 10.0d);
+        var subSectorY = (int)Math.Floor(((y ?? 0) - sectorY * 100) / 10.0d);
+        var subSectorZ = (int)Math.Floor(((z ?? 0) - sectorZ * 100) / 10.0d);
+
+        return subSectorX * 100 + subSectorY * 10 + subSectorZ;
     }
 
     private async Task AddSectorPrefixToDataTable(SolarSystem solarSystem, string[] prefixes)
