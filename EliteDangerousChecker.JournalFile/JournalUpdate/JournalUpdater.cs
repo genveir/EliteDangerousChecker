@@ -132,7 +132,7 @@ internal sealed class JournalUpdater : IDisposable
         return DateTime.MinValue;
     }
 
-    private static async Task UpdateLastUpdateTime(DateTime newTime)
+    internal static async Task UpdateLastUpdateTime(DateTime newTime)
     {
         var text = newTime.ToString("O");
         await File.WriteAllTextAsync(LastUpdateTimeFile, text);
