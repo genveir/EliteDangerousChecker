@@ -1,7 +1,7 @@
 ﻿using EliteDangerousChecker.Database.DirectQueries;
 using System.Text.Json;
 
-namespace EliteDangerousChecker.JournalFile.JournalUpdate;
+namespace EliteDangerousChecker.JournalFile.JournalUpdate.Market;
 internal static class MarketSell
 {
     public static async Task HandleMarketSell(string journalLine)

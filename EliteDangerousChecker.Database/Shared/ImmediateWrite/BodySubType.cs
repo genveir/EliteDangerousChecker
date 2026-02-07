@@ -11,6 +11,15 @@ public static class BodySubTypeAccess
         getItemsTask: GetItems,
         addItemTask: AddItem);
 
+    public static async Task<string?> GetName(long id)
+    {
+        var items = await GetItems();
+
+        var item = items.FirstOrDefault(kv => kv.Value == id);
+
+        return item.Key;
+    }
+
     private static async Task<Dictionary<string, long>> GetItems()
     {
         if (Items == null)

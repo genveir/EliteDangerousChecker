@@ -1,7 +1,11 @@
 ﻿namespace EliteDangerousChecker.JournalFile;
-internal class FilesChangedHandler
+internal sealed class FilesChangedHandler : IDisposable
 {
-    public static async Task HandleUpdate(List<string> changedFiles)
+    private record CurrentJournalUpdater(string FileName, JournalUpdate.JournalUpdater Updater);
+
+    private CurrentJournalUpdater? currentJournalUpdater;
+
+    public async Task HandleUpdate(string[] changedFiles)
     {
         var marketFileChanged = changedFiles.Any(f => f.EndsWith("Market.json", StringComparison.OrdinalIgnoreCase));
 
@@ -11,13 +15,27 @@ internal class FilesChangedHandler
             await marketUpdater.UpdateMarket();
         }
 
-        var journalFilesChanged = changedFiles.Any(f => Path.GetFileName(f).StartsWith("Journal.", StringComparison.OrdinalIgnoreCase)
-            && f.EndsWith(".log", StringComparison.OrdinalIgnoreCase));
+        var changedJournalFiles = changedFiles.Where(f => Path.GetFileName(f).StartsWith("Journal.", StringComparison.OrdinalIgnoreCase)
+            && f.EndsWith(".log", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(f => f)
+            .ToArray();
 
-        if (journalFilesChanged)
+        for (int n = 0; n < changedJournalFiles.Length; n++)
         {
-            var journalUpdater = new JournalUpdate.JournalUpdater();
-            await journalUpdater.UpdateFromJournal();
+            if (currentJournalUpdater != null)
+            {
+                if (currentJournalUpdater.FileName != changedJournalFiles[n])
+                {
+                    currentJournalUpdater.Updater.Dispose();
+                    currentJournalUpdater = new(changedJournalFiles[n], new JournalUpdate.JournalUpdater(changedJournalFiles[n]));
+                }
+            }
+            else
+            {
+                currentJournalUpdater = new(changedJournalFiles[n], new JournalUpdate.JournalUpdater(changedJournalFiles[n]));
+            }
+
+            await currentJournalUpdater.Updater.UpdateFromJournal();
         }
 
         var navRouteFileChanged = changedFiles.Any(f => f.EndsWith("NavRoute.json", StringComparison.OrdinalIgnoreCase));
@@ -26,6 +44,15 @@ internal class FilesChangedHandler
         {
             var navRouteUpdater = new NavRouteUpdate.NavRouteUpdater();
             await navRouteUpdater.UpdateNavRoute();
+        }
+    }
+
+    public void Dispose()
+    {
+        if (currentJournalUpdater != null)
+        {
+            currentJournalUpdater.Updater.Dispose();
+            currentJournalUpdater = null;
         }
     }
 }

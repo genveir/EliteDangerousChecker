@@ -1,94 +1,145 @@
-﻿using EliteDangerousChecker.Database.DirectQueries;
+﻿using EliteDangerousChecker.JournalFile.JournalUpdate.FSD;
+using EliteDangerousChecker.JournalFile.JournalUpdate.Market;
+using EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
-internal class JournalUpdater
+internal sealed class JournalUpdater : IDisposable
 {
     const string JournalFilePath = @"C:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous\";
+    private static readonly string LastUpdateTimeFile = Path.Combine(JournalFilePath, "lastupdatetime.txt");
+
+    private readonly StreamReader reader;
+    private readonly string fileName;
+
+    public JournalUpdater(string fileName)
+    {
+        reader = new StreamReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        this.fileName = fileName;
+    }
 
     public async Task UpdateFromJournal()
     {
-        var lastUpdate = await GetLastCommoditiesSoldDateTime.Execute();
+        var lastUpdate = await GetLastUpdateTime();
 
-        var journalFiles = Directory.GetFiles(JournalFilePath, "Journal.*.log")
-            .OrderBy(f => f)
-            .ToList();
-
-        for (int n = 0; n < journalFiles.Count; n++)
+        try
         {
-            var currentFile = journalFiles[n];
-            var nextFile = n + 1 < journalFiles.Count ? journalFiles[n + 1] : null;
-
-            bool parseFile = true;
-
-            if (nextFile != null)
+            while (!reader.EndOfStream)
             {
-                var nextDateTimePart = Path.GetFileNameWithoutExtension(journalFiles[n + 1]).Split('.')[1];
-                var nextFileDateTime = ParseFilenameDateTime(nextDateTimePart);
-
-                if (nextFileDateTime <= lastUpdate)
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line))
                 {
-                    parseFile = false;
+                    continue;
                 }
-            }
 
-            if (!parseFile)
-                continue;
-
-            try
-            {
-                using var reader = new StreamReader(new FileStream(journalFiles[n], FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-
-                while (!reader.EndOfStream)
+                var timestampPart = line.Substring(15, 19);
+                var entryTime = DateTime.Parse(timestampPart);
+                if (entryTime <= lastUpdate)
                 {
-                    var line = await reader.ReadLineAsync();
-                    if (string.IsNullOrWhiteSpace(line))
-                    {
-                        continue;
-                    }
-
-                    var timestampPart = line.Substring(15, 19);
-                    var entryTime = DateTime.Parse(timestampPart);
-                    if (entryTime <= lastUpdate)
-                    {
-                        continue;
-                    }
-
-                    await HandleLine(line);
+                    continue;
                 }
+
+                await HandleLine(entryTime, line);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error processing journal file {currentFile}: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing journal file {fileName}: {ex.Message}");
         }
     }
 
-    private async Task HandleLine(string line)
+    private static bool ShipHasBeenDismissed = false;
+    private static bool LastHandledLineWasFSSBodySignals = false;
+    private static async Task HandleLine(DateTime entryTime, string line)
     {
         var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var eventType = splitLine[6];
 
-        switch (eventType)
+        if (LastHandledLineWasFSSBodySignals && eventType is not ("Scan" or "CodexEntry" or "ScanBaryCentre"))
         {
-            case "MarketSell":
-                await MarketSell.HandleMarketSell(line);
-                break;
+            Console.WriteLine($"Unexpected: FSSBodySignals event not followed by Scan event. Timestamp: {splitLine[3]}, eventType: {eventType}");
+        }
+
+        if (eventType == "Liftoff")
+        {
+            if (splitLine[7] == "PlayerControlled" && splitLine[8] == ":false")
+            {
+                ShipHasBeenDismissed = true;
+            }
+        }
+
+        if (eventType == "Touchdown")
+        {
+            ShipHasBeenDismissed = false;
+        }
+
+        bool lineWasHandled = true;
+
+        if (!ShipHasBeenDismissed)
+        {
+            switch (eventType)
+            {
+                case "MarketSell":
+                    await MarketSell.HandleMarketSell(line);
+                    LastHandledLineWasFSSBodySignals = false;
+                    break;
+                case "FSDJump":
+                    ScanCache.Clear();
+                    FSDCache.Clear();
+                    LastHandledLineWasFSSBodySignals = false;
+                    await FSDJump.HandleFSDJump(line);
+                    break;
+                case "FSDTarget":
+                    await FSDTarget.HandleFSDTarget(line);
+                    LastHandledLineWasFSSBodySignals = false;
+                    break;
+                case "Scan":
+                    await Scan.HandleScan(line);
+                    LastHandledLineWasFSSBodySignals = false;
+                    break;
+                case "FSSBodySignals":
+                    await FssBodySignals.HandleFssBodySignals(line);
+                    LastHandledLineWasFSSBodySignals = true;
+                    break;
+                case "SAASignalsFound":
+                    await SAASignalsFound.HandleSAASignalsFound(line);
+                    LastHandledLineWasFSSBodySignals = false;
+                    break;
+                default:
+                    lineWasHandled = false;
+                    break;
+            }
+        }
+
+        if (lineWasHandled)
+        {
+            await UpdateLastUpdateTime(entryTime);
         }
     }
 
-    private DateTime ParseFilenameDateTime(string value)
+    private static async Task<DateTime> GetLastUpdateTime()
     {
-        var parts = value.Split(['-', 'T']);
+        if (!File.Exists(LastUpdateTimeFile))
+            return DateTime.MinValue;
 
-        int year = int.Parse(parts[0]);
-        int month = int.Parse(parts[1]);
-        int day = int.Parse(parts[2]);
+        var text = await File.ReadAllTextAsync(LastUpdateTimeFile);
+        if (string.IsNullOrWhiteSpace(text))
+            return DateTime.MinValue;
 
-        int hour = int.Parse(parts[3].Substring(0, 2));
-        int minute = int.Parse(parts[3].Substring(2, 2));
-        int second = int.Parse(parts[3].Substring(4, 2));
+        if (DateTime.TryParse(text, out var dt))
+            return dt;
 
-        return new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc);
+        return DateTime.MinValue;
+    }
+
+    private static async Task UpdateLastUpdateTime(DateTime newTime)
+    {
+        var text = newTime.ToString("O");
+        await File.WriteAllTextAsync(LastUpdateTimeFile, text);
+    }
+
+    public void Dispose()
+    {
+        reader.Dispose();
     }
 }

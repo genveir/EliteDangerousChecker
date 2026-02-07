@@ -6,10 +6,12 @@ public class JournalWatcherBackgroundService : BackgroundService
 {
     private JournalFolderWatcher? watcher;
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
         watcher = new JournalFolderWatcher();
-        await watcher.StartWatching(cancellationToken);
+        watcher.StartWatching(cancellationToken);
+
+        return Task.CompletedTask;
     }
 
     public override void Dispose()

@@ -13,8 +13,7 @@ select
 from
 	Body b
 where
-	(b.BodySubTypeId in (32, 19, 26) or TerraformingStateId = 2)
-	and SolarSystemId in @SolarSystemIds",
+	SolarSystemId in @SolarSystemIds",
             new { SolarSystemIds = solarSystemIds });
 
         var solarSystems = await connection.QueryAsync<long>(
@@ -35,9 +34,13 @@ where
             var ammoniaWorlds = planets.Count(p => p.BodySubTypeId == 26);
             var terraformablePlanets = planets.Count(p => p.TerraformingStateId == 2 && IsNotANotableSubType(p.BodySubTypeId));
 
+            var known = solarSystems.Any(s => s == ssId);
+            var bodyCount = planetData.Count();
+
             return new KnownData(
                 SolarSystemId: ssId,
-                Known: solarSystems.Any(s => s == ssId),
+                Known: known,
+                BodyCount: bodyCount,
                 EarthLikePlanets: earthLikePlanets,
                 WaterWorlds: waterWorlds,
                 AmmoniaWorlds: ammoniaWorlds,
@@ -61,6 +64,7 @@ where
 public record KnownData(
     long SolarSystemId,
     bool Known,
+    int BodyCount,
     int EarthLikePlanets,
     int WaterWorlds,
     int AmmoniaWorlds,

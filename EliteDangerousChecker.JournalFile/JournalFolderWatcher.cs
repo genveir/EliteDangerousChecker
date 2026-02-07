@@ -5,23 +5,17 @@ public sealed class JournalFolderWatcher : IDisposable
     const string JournalFolderPath = @"c:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous";
 
     private readonly FileSystemWatcher watcher;
+    private readonly FilesChangedHandler filesChangedHandler = new();
 
-    private DateTime? LastChange;
-    private List<string> ChangedFiles = [];
+    private readonly List<string> ChangedFiles = [];
 
-    private static readonly TimeSpan WaitAfterLastChange = TimeSpan.FromMilliseconds(1000);
-
-    private static int Delay = 1000;
-
-    public bool HasChanges { get; private set; } = false;
+    private const int Delay = 100;
 
     public JournalFolderWatcher()
     {
         Console.WriteLine($"created journal folder watcher");
 
         watcher = new FileSystemWatcher(JournalFolderPath);
-
-        Delay = new Random().Next(500) + 750;
     }
 
     public async Task StartWatching(CancellationToken cancellationToken)
@@ -39,9 +33,10 @@ public sealed class JournalFolderWatcher : IDisposable
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (LastChange != null && DateTime.Now - LastChange > WaitAfterLastChange)
+                if (ChangedFiles.Count > 0)
                 {
-                    await PerformCallback();
+                    await PerformCallback(ChangedFiles.ToArray());
+                    ChangedFiles.Clear();
                 }
 
                 await Task.Delay(Delay, cancellationToken);
@@ -60,12 +55,9 @@ public sealed class JournalFolderWatcher : IDisposable
         }
     }
 
-    private async Task PerformCallback()
+    private async Task PerformCallback(string[] changedFiles)
     {
-        await FilesChangedHandler.HandleUpdate(ChangedFiles);
-
-        LastChange = null;
-        ChangedFiles.Clear();
+        await filesChangedHandler.HandleUpdate(changedFiles);
     }
 
     private void OnError(object sender, ErrorEventArgs e)
@@ -76,7 +68,6 @@ public sealed class JournalFolderWatcher : IDisposable
 
     private void OnChange(object sender, FileSystemEventArgs e)
     {
-        LastChange = DateTime.Now;
         ChangedFiles.Add(e.FullPath);
     }
 

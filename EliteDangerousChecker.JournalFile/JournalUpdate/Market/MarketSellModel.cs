@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace EliteDangerousChecker.JournalFile.JournalUpdate;
+namespace EliteDangerousChecker.JournalFile.JournalUpdate.Market;
 public class MarketSellModel
 {
     [JsonPropertyName("timestamp")]
