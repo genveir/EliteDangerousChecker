@@ -1,11 +1,11 @@
 ﻿using EliteDangerousChecker.JournalFile.Shared;
 
 namespace EliteDangerousChecker.JournalFile.NavRouteUpdate;
-internal class NavRouteUpdater
+public static class NavRouteUpdater
 {
     const string NavRouteLocation = @"C:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous\NavRoute.json";
 
-    public async Task UpdateNavRoute()
+    public static async Task UpdateNavRoute(bool printRoute)
     {
         using var reader = new StreamReader(new FileStream(NavRouteLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
@@ -21,7 +21,12 @@ internal class NavRouteUpdater
 
         var systemData = model.Route!.Select(hop => new StarSystemInfoWriter.SolarSystemDataModel(hop.SystemAddress!.Value, hop.StarSystem, hop.StarClass)).ToArray();
 
-        Console.WriteLine("NEW NAV ROUTE:");
-        await StarSystemInfoWriter.WriteSystemInfo(systemData);
+        if (printRoute)
+        {
+            Console.WriteLine("NEW NAV ROUTE:");
+            await StarSystemInfoWriter.WriteSystemInfo(systemData);
+        }
+
+        NavRouteCache.Set(model);
     }
 }

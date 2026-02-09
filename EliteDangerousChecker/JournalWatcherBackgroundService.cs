@@ -1,4 +1,5 @@
 ﻿using EliteDangerousChecker.JournalFile;
+using EliteDangerousChecker.JournalFile.NavRouteUpdate;
 
 namespace EliteDangerousChecker.Api;
 
@@ -8,6 +9,7 @@ public class JournalWatcherBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await NavRouteUpdater.UpdateNavRoute(printRoute: false);
         await SystemLogPrinter.PrintLogForCurrentSystem();
 
         watcher = new JournalFolderWatcher();

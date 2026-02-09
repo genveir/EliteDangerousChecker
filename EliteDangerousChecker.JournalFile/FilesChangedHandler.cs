@@ -1,4 +1,6 @@
-﻿namespace EliteDangerousChecker.JournalFile;
+﻿using EliteDangerousChecker.JournalFile.NavRouteUpdate;
+
+namespace EliteDangerousChecker.JournalFile;
 internal sealed class FilesChangedHandler : IDisposable
 {
     private record CurrentJournalUpdater(string FileName, JournalUpdate.JournalUpdater Updater);
@@ -44,8 +46,7 @@ internal sealed class FilesChangedHandler : IDisposable
 
         if (navRouteFileChanged)
         {
-            var navRouteUpdater = new NavRouteUpdate.NavRouteUpdater();
-            await navRouteUpdater.UpdateNavRoute();
+            await NavRouteUpdater.UpdateNavRoute(printRoute: true);
         }
     }
 
