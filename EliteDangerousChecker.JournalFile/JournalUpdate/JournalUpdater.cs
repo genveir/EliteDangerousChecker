@@ -48,17 +48,11 @@ internal sealed class JournalUpdater : IDisposable
     }
 
     private static bool ShipHasBeenDismissed = false;
-    private static bool LastHandledLineWasFSSBodySignals = false;
     private static async Task HandleLine(DateTime entryTime, string line)
     {
         var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var eventType = splitLine[6];
-
-        if (LastHandledLineWasFSSBodySignals && eventType is not ("Scan" or "CodexEntry" or "ScanBaryCentre"))
-        {
-            Console.WriteLine($"Unexpected: FSSBodySignals event not followed by Scan event. Timestamp: {splitLine[3]}, eventType: {eventType}");
-        }
 
         if (eventType == "Liftoff")
         {
@@ -75,45 +69,57 @@ internal sealed class JournalUpdater : IDisposable
 
         bool lineWasHandled = true;
 
-        if (!ShipHasBeenDismissed)
+        switch (eventType)
         {
-            switch (eventType)
-            {
-                case "MarketSell":
-                    await MarketSell.HandleMarketSell(line);
-                    LastHandledLineWasFSSBodySignals = false;
-                    break;
-                case "FSDJump":
-                    ScanCache.Clear();
-                    FSDCache.Clear();
-                    LastHandledLineWasFSSBodySignals = false;
-                    await FSDJump.HandleFSDJump(line);
-                    break;
-                case "FSDTarget":
-                    await FSDTarget.HandleFSDTarget(line);
-                    LastHandledLineWasFSSBodySignals = false;
-                    break;
-                case "Scan":
-                    await Scan.HandleScan(line);
-                    LastHandledLineWasFSSBodySignals = false;
-                    break;
-                case "FSSBodySignals":
-                    await FssBodySignals.HandleFssBodySignals(line);
-                    LastHandledLineWasFSSBodySignals = true;
-                    break;
-                case "SAASignalsFound":
-                    await SAASignalsFound.HandleSAASignalsFound(line);
-                    LastHandledLineWasFSSBodySignals = false;
-                    break;
-                default:
-                    lineWasHandled = false;
-                    break;
-            }
+            case "MarketSell":
+                await MarketSell.HandleMarketSell(line);
+                break;
+            case "FSDJump":
+                CheckScanCacheForUnpublishedNotableBodies();
+
+                ScanCache.Clear();
+                FSDCache.Clear();
+                await FSDJump.HandleFSDJump(line);
+                break;
+            case "FSDTarget":
+                if (ShipHasBeenDismissed) break;
+                await FSDTarget.HandleFSDTarget(line);
+                break;
+            case "Scan":
+                await Scan.HandleScan(line);
+                break;
+            case "FSSBodySignals":
+                await FssBodySignals.HandleFssBodySignals(line);
+                break;
+            case "SAASignalsFound":
+                await SAASignalsFound.HandleSAASignalsFound(line);
+                break;
+            default:
+                lineWasHandled = false;
+                break;
         }
 
         if (lineWasHandled)
         {
             await UpdateLastUpdateTime(entryTime);
+        }
+    }
+
+    private static void CheckScanCacheForUnpublishedNotableBodies()
+    {
+        var allInCache = ScanCache.GetAll();
+
+        var unpublishedNotableBodies = allInCache.Where(sd => sd.IsNotable() && !sd.wasPrinted).ToArray();
+
+        if (unpublishedNotableBodies.Length == 0)
+            return;
+
+        Console.WriteLine("The following notable bodies were not printed:");
+        foreach (var scanData in unpublishedNotableBodies)
+        {
+            var scanMessage = ScanFormatter.Format(scanData);
+            Console.WriteLine(scanMessage);
+            scanData.wasPrinted = true;
         }
     }
 
