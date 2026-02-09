@@ -37,7 +37,9 @@ public class SystemLogPrinter
 
     private static async Task<bool> FindJumpAndUpdateTime(string fileName)
     {
-        var lines = await File.ReadAllLinesAsync(fileName);
+        var reader = new StreamReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+
+        var lines = (await reader.ReadToEndAsync()).Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         for (int i = lines.Length - 1; i >= 0; i--)
         {
             var line = lines[i];
