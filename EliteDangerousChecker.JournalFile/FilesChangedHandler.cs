@@ -7,6 +7,8 @@ internal sealed class FilesChangedHandler : IDisposable
 
     public async Task HandleUpdate(string[] changedFiles)
     {
+        if (changedFiles == null) return;
+
         var marketFileChanged = changedFiles.Any(f => f.EndsWith("Market.json", StringComparison.OrdinalIgnoreCase));
 
         if (marketFileChanged)
