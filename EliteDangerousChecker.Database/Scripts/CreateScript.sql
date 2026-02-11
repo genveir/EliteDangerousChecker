@@ -324,6 +324,16 @@ create table TableCounts (
     RingSignalGenus int
 );
 
+create table SolarSystemDistances
+(
+	LowerSolarSystemId bigint not null,
+	HigherSolarSystemId bigint not null,
+	Distance float not null
+);
+
+alter table SolarSystemDistances add constraint PK_SolarSystemDistances primary key (LowerSolarSystemId, HigherSolarSystemId);
+alter table SolarSystemDistances add constraint CK_ColarSystemDistances_Order check (LowerSolarSystemId <= HigherSolarSystemId);
+
 -- Foreign Keys
 
 alter table Commodity add constraint FK_Commodity_CommodityCategory foreign key (CommodityCategoryId) references CommodityCategory (Id);
@@ -400,6 +410,9 @@ alter table RingSignalType add constraint FK_RingSignalType_SignalType foreign k
 
 alter table RingSignalGenus add constraint FK_RingSignalGenus_Ring foreign key (RingId) references Ring (Id);
 alter table RingSignalGenus add constraint FK_RingSignalGenus_SignalGenus foreign key (SignalGenusId) references SignalGenus (Id);
+
+alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Lower foreign key (LowerSolarSystemId) references SolarSystem (Id)
+alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Higher foreign key (HigherSolarSystemId) references SolarSystem (Id)
 
 -- Indexes
 
