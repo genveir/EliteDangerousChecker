@@ -119,6 +119,8 @@ public class BulkWriter
         if (solarSystem == null)
             return;
 
+        if (solarSystem.Bodies == null || solarSystem.Bodies.Count == 0)
+            return;
 
         if (solarSystem.ControllingFaction != null)
         {
@@ -156,12 +158,9 @@ public class BulkWriter
 
         await AddSectorPrefixToDataTable(solarSystem, prefixWords);
 
-        if (solarSystem.Bodies != null)
+        foreach (var body in solarSystem.Bodies)
         {
-            foreach (var body in solarSystem.Bodies)
-            {
-                await AddBody(body, solarSystem);
-            }
+            await AddBody(body, solarSystem);
         }
 
         if (solarSystem.Stations != null)
