@@ -75,8 +75,6 @@ internal sealed class JournalUpdater : IDisposable
                 await MarketSell.HandleMarketSell(line);
                 break;
             case "FSDJump":
-                CheckScanCacheForUnpublishedNotableBodies();
-
                 ScanCache.Clear();
                 FSDCache.Clear();
                 await FSDJump.HandleFSDJump(line);
@@ -93,6 +91,9 @@ internal sealed class JournalUpdater : IDisposable
                 break;
             case "SAASignalsFound":
                 await SAASignalsFound.HandleSAASignalsFound(line);
+                break;
+            case "StartJump":
+                CheckScanCacheForUnpublishedNotableBodies();
                 break;
             default:
                 lineWasHandled = false;

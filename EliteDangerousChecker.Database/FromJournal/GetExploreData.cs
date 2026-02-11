@@ -35,7 +35,7 @@ where
             var terraformablePlanets = planets.Count(p => p.TerraformingStateId == 2 && IsNotANotableSubType(p.BodySubTypeId));
 
             var known = solarSystems.Any(s => s == ssId);
-            var bodyCount = planetData.Count();
+            var bodyCount = planetData.Where(p => p.SolarSystemId == ssId).Count();
 
             return new KnownData(
                 SolarSystemId: ssId,

@@ -72,11 +72,14 @@ internal static class StarSystemInfoWriter
             switch (dbData.Known)
             {
                 case true:
-                    Console.WriteLine($"Known system: {systemMsg}");
+                    Console.WriteLine($"  Known: {systemMsg}");
                     Console.WriteLine($"  - {dbData.BodyCount} bodies: {dbData.EarthLikePlanets}E, {dbData.WaterWorlds}W, {dbData.AmmoniaWorlds}A, {dbData.TerraformablePlanets}T");
                     break;
                 default:
-                    Console.WriteLine($"UNKNOWN SYSTEM: {systemMsg}");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write($"UNKNOWN: ");
+                    Console.ResetColor();
+                    Console.WriteLine(systemMsg);
                     break;
             }
         }

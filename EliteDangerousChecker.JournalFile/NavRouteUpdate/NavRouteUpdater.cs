@@ -21,12 +21,12 @@ public static class NavRouteUpdater
 
         var systemData = model.Route!.Select(hop => new StarSystemInfoWriter.SolarSystemDataModel(hop.SystemAddress!.Value, hop.StarSystem, hop.StarClass)).ToArray();
 
+        NavRouteCache.Set(model);
+
         if (printRoute)
         {
             Console.WriteLine("NEW NAV ROUTE:");
             await StarSystemInfoWriter.WriteSystemInfo(systemData);
         }
-
-        NavRouteCache.Set(model);
     }
 }
