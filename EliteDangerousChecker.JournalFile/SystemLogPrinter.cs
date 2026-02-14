@@ -5,7 +5,7 @@ public class SystemLogPrinter
 {
     const string JournalFolderPath = @"c:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous";
 
-    public static async Task PrintLogForCurrentSystem()
+    public static async Task PrintLogForCurrentSystem(SystemChangeTracker tracker)
     {
         await Task.Delay(100);
 
@@ -29,7 +29,7 @@ public class SystemLogPrinter
 
         foreach (var file in fileStack)
         {
-            using var updater = new JournalUpdater(file);
+            using var updater = new JournalUpdater(tracker, file);
 
             await updater.UpdateFromJournal();
         }

@@ -1,11 +1,18 @@
-﻿using EliteDangerousChecker.JournalFile.NavRouteUpdate;
+﻿using EliteDangerousChecker.JournalFile.JournalUpdate;
+using EliteDangerousChecker.JournalFile.NavRouteUpdate;
 
 namespace EliteDangerousChecker.JournalFile;
-internal sealed class FilesChangedHandler : IDisposable
+public sealed class FilesChangedHandler : IDisposable
 {
-    private record CurrentJournalUpdater(string FileName, JournalUpdate.JournalUpdater Updater);
+    private record CurrentJournalUpdater(string FileName, JournalUpdater Updater);
 
     private CurrentJournalUpdater? currentJournalUpdater;
+    private readonly SystemChangeTracker tracker;
+
+    public FilesChangedHandler(SystemChangeTracker tracker)
+    {
+        this.tracker = tracker;
+    }
 
     public async Task HandleUpdate(string[] changedFiles)
     {
@@ -41,12 +48,12 @@ internal sealed class FilesChangedHandler : IDisposable
                 if (currentJournalUpdater.FileName != changedJournalFiles[n])
                 {
                     currentJournalUpdater.Updater.Dispose();
-                    currentJournalUpdater = new(changedJournalFiles[n], new JournalUpdate.JournalUpdater(changedJournalFiles[n]));
+                    currentJournalUpdater = new(changedJournalFiles[n], new JournalUpdater(tracker, changedJournalFiles[n]));
                 }
             }
             else
             {
-                currentJournalUpdater = new(changedJournalFiles[n], new JournalUpdate.JournalUpdater(changedJournalFiles[n]));
+                currentJournalUpdater = new(changedJournalFiles[n], new JournalUpdater(tracker, changedJournalFiles[n]));
             }
 
             try

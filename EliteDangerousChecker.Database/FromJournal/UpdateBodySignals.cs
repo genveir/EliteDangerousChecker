@@ -13,6 +13,10 @@ public static class UpdateBodySignals
         var existsSql = "select case when exists (select 1 from Body where SolarSystemId = @systemAddress and BodyId = @bodyId) then 1 else 0 end";
         var bodyExists = await connection.ExecuteScalarAsync<bool>(existsSql, new { systemAddress, bodyId });
 
+        var solarSystemName = await GetSolarSystemName.Execute(systemAddress);
+
+        bodyName = bodyName.Replace(solarSystemName, "");
+
         if (!bodyExists)
         {
             var insertBodySql = @"

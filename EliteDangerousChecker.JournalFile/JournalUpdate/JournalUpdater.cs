@@ -9,11 +9,13 @@ internal sealed class JournalUpdater : IDisposable
     private static readonly string LastUpdateTimeFile = Path.Combine(JournalFilePath, "lastupdatetime.txt");
 
     private readonly StreamReader reader;
+    private readonly SystemChangeTracker tracker;
     private readonly string fileName;
 
-    public JournalUpdater(string fileName)
+    public JournalUpdater(SystemChangeTracker tracker, string fileName)
     {
         reader = new StreamReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        this.tracker = tracker;
         this.fileName = fileName;
     }
 
@@ -38,7 +40,7 @@ internal sealed class JournalUpdater : IDisposable
                     continue;
                 }
 
-                await HandleLine(entryTime, line);
+                await HandleLine(tracker, entryTime, line);
             }
         }
         catch (Exception ex)
@@ -48,7 +50,7 @@ internal sealed class JournalUpdater : IDisposable
     }
 
     private static bool ShipHasBeenDismissed = false;
-    private static async Task HandleLine(DateTime entryTime, string line)
+    private static async Task HandleLine(SystemChangeTracker tracker, DateTime entryTime, string line)
     {
         var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -76,14 +78,14 @@ internal sealed class JournalUpdater : IDisposable
                 break;
             case "FSDJump":
                 FSDCache.Clear();
-                await FSDJump.HandleFSDJump(line);
+                await FSDJump.HandleFSDJump(tracker, line);
                 break;
             case "FSDTarget":
                 if (ShipHasBeenDismissed) break;
                 await FSDTarget.HandleFSDTarget(line);
                 break;
             case "Scan":
-                await Scan.HandleScan(line);
+                await Scan.HandleScan(tracker, line);
                 break;
             case "FSSBodySignals":
                 await FssBodySignals.HandleFssBodySignals(line);

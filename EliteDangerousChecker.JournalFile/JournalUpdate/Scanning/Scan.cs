@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
 internal static class Scan
 {
-    public static async Task HandleScan(string line)
+    public static async Task HandleScan(SystemChangeTracker tracker, string line)
     {
         var model = JsonSerializer.Deserialize<ScanModel>(line);
         if (model == null)
@@ -35,7 +35,7 @@ internal static class Scan
         {
             await UpdateBodyFromScan.Execute(model.SystemAddress.Value, model.BodyId.Value, model.BodyName, model.WasDiscovered, model.WasMapped, model.WasFootfalled, model.TerraformState, model.PlanetClass, model.StarType);
 
-            SystemChangeTracker.MarkGeneralChange();
+            tracker.MarkGeneralChange();
         }
     }
 }

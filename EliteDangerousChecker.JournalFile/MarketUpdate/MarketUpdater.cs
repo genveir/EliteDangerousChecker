@@ -14,7 +14,7 @@ internal class MarketUpdater
 
         var json = await reader.ReadToEndAsync();
 
-        var model = JsonSerializer.Deserialize<Models.MarketModel>(json);
+        var model = JsonSerializer.Deserialize<MarketModel>(json);
 
         if (model == null)
         {

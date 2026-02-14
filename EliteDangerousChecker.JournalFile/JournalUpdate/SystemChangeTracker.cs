@@ -2,34 +2,56 @@
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
 
-internal class SystemChangeTracker
+public class SystemChangeTracker
 {
-    private static bool HasGeneralChanges = false;
-    private static List<int> BodyChanges = [];
-    private static long CurrentSystemAddress = 0;
+    private readonly SystemWriter systemWriter;
 
-    private static bool Running = true;
+    private readonly ITermController termController;
+    private bool PrintedInitial = false;
 
-    public static void MarkSystemChange(long newSystemAddress)
+    private bool HasGeneralChanges = false;
+    private List<int> BodyChanges = [];
+    private long CurrentSystemAddress = 0;
+
+    private bool Running = true;
+
+    public SystemChangeTracker(SystemWriter systemWriter, ITermController termController)
+    {
+        this.systemWriter = systemWriter;
+        this.termController = termController;
+    }
+
+    public void MarkSystemChange(long newSystemAddress)
     {
         CurrentSystemAddress = newSystemAddress;
         HasGeneralChanges = true;
     }
 
-    public static void MarkGeneralChange()
+    public void MarkGeneralChange()
     {
         HasGeneralChanges = true;
     }
 
-    public static void MarkBodyChange(int bodyId)
+    public void MarkBodyChange(int bodyId)
     {
         BodyChanges.Add(bodyId);
     }
 
-    public static async Task StartOutputLoop()
+    public async Task StartOutputLoop()
     {
+        Console.WriteLine("Starting system change tracker output loop.");
+
         while (Running)
         {
+            if (!PrintedInitial)
+            {
+                if (termController.IsInitialized)
+                {
+                    PrintedInitial = true;
+                    await SystemLogPrinter.PrintLogForCurrentSystem(this);
+                }
+            }
+
             var hasChanges = HasGeneralChanges || (BodyChanges.Count > 0);
 
             if (hasChanges)
@@ -44,14 +66,17 @@ internal class SystemChangeTracker
 
                 if (general)
                 {
+                    Console.WriteLine("updating whole system");
                     var systemData = await GetBodyData.Execute(CurrentSystemAddress);
 
-                    SystemWriter.WriteSystem(solarSystemName, systemData);
+                    await systemWriter.WriteSystem(solarSystemName, systemData);
                 }
                 if (bodiesToUpdate.Length > 0)
                 {
                     foreach (var bodyToUpdate in bodiesToUpdate)
                     {
+                        Console.WriteLine($"updating body {bodyToUpdate}");
+
                         var bodyData = await GetBodyData.Execute(CurrentSystemAddress, bodyToUpdate);
 
                         if (bodyData == null)
@@ -60,7 +85,7 @@ internal class SystemChangeTracker
                             continue;
                         }
 
-                        SystemWriter.UpdateBody(bodyData);
+                        await systemWriter.UpdateBody(bodyData);
                     }
                 }
 
@@ -69,7 +94,7 @@ internal class SystemChangeTracker
         }
     }
 
-    public static void Stop()
+    public void Stop()
     {
         Running = false;
     }

@@ -1,0 +1,42 @@
+﻿using EliteDangerousChecker.BlazorTerm.Controller;
+using EliteDangerousChecker.BlazorTerm.HostedServices;
+using EliteDangerousChecker.JournalFile;
+using EliteDangerousChecker.JournalFile.JournalUpdate;
+
+namespace EliteDangerousChecker.BlazorTerm;
+
+public static class Program
+{
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        ConfigureServices(builder.Services);
+
+        builder.Services.AddHostedService<JournalFolderWatcherService>();
+        builder.Services.AddHostedService<SystemChangeTrackerService>();
+
+        var app = builder.Build();
+
+        app.UseHttpsRedirection();
+
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.MapBlazorHub();
+        app.MapFallbackToPage("/_Host");
+
+        app.Run();
+    }
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        services.AddRazorPages();
+        services.AddServerSideBlazor();
+
+        services.AddSingleton<ITermController, TermController>();
+
+        JournalFileServiceRegistration.RegisterServices(services);
+    }
+}

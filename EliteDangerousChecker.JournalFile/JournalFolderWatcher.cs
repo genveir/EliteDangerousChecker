@@ -5,17 +5,18 @@ public sealed class JournalFolderWatcher : IDisposable
     const string JournalFolderPath = @"c:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous";
 
     private readonly FileSystemWatcher watcher;
-    private readonly FilesChangedHandler filesChangedHandler = new();
+    private readonly FilesChangedHandler filesChangedHandler;
 
     private readonly List<string> ChangedFiles = [];
 
     private const int Delay = 100;
 
-    public JournalFolderWatcher()
+    public JournalFolderWatcher(FilesChangedHandler filesChangedHandler)
     {
         Console.WriteLine($"created journal folder watcher");
 
         watcher = new FileSystemWatcher(JournalFolderPath);
+        this.filesChangedHandler = filesChangedHandler;
     }
 
     public async Task StartWatching(CancellationToken cancellationToken)
