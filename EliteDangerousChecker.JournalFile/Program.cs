@@ -1,4 +1,5 @@
-﻿using EliteDangerousChecker.JournalFile.NavRouteUpdate;
+﻿using EliteDangerousChecker.JournalFile.JournalUpdate;
+using EliteDangerousChecker.JournalFile.NavRouteUpdate;
 
 namespace EliteDangerousChecker.JournalFile;
 public static class Program
@@ -11,6 +12,8 @@ public static class Program
 
         try
         {
+            Task.Run(() => SystemChangeTracker.StartOutputLoop(), cancellationToken);
+
             await NavRouteUpdater.UpdateNavRoute(printRoute: false);
             await SystemLogPrinter.PrintLogForCurrentSystem();
 

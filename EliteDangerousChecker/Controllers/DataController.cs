@@ -14,6 +14,16 @@ public class DataController : ControllerBase
         this.jsonReaderFactory = jsonReaderFactory;
     }
 
+    [HttpGet("api/data/insert/{batchToProcess}/max")]
+    public async Task<IActionResult> ProcessNumber(int batchToProcess)
+    {
+        var lastBatch = Directory.GetFiles(@"e:\temp\elite\", "batch_*.json")
+            .Select(f => int.Parse(Path.GetFileName(f).Split(['_', '.'])[1]))
+            .Max();
+
+        return await ProcessNumber(batchToProcess, lastBatch);
+    }
+
     [HttpGet("api/data/insert/{firstBatchToProcess}/{lastBatchToProcess}")]
     public async Task<IActionResult> ProcessNumber(int firstBatchToProcess, int lastBatchToProcess)
     {

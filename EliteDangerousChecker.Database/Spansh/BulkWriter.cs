@@ -152,7 +152,7 @@ public class BulkWriter
             }
         }
 
-        var (prefixWords, suffix, postfix) = ParseName(solarSystem);
+        var (prefixWords, suffix, postfix) = SolarSystemNameParser.Parse(solarSystem.Name);
 
         await AddSolarSystemToDataTable(solarSystem, suffix, postfix);
 
@@ -175,27 +175,6 @@ public class BulkWriter
         }
     }
 
-    private (string[] prefixWords, string? suffix, string? postfix) ParseName(SolarSystem solarSystem)
-    {
-        if (solarSystem.Name == null)
-        {
-            return (Array.Empty<string>(), null, null);
-        }
-
-        var nameParts = solarSystem.Name.Split(' ');
-        if (nameParts.Length >= 3)
-        {
-            var suffix = nameParts[^2];
-            var postfix = nameParts[^1];
-            if (suffix.Length == 4 && suffix[2] == '-' &&
-                postfix.Length <= 5 && postfix[1] >= '0' && postfix[1] <= '9')
-            {
-                return (nameParts[..^2], suffix, postfix);
-            }
-        }
-        return (nameParts, null, null);
-    }
-
     private async Task AddBody(Body body, SolarSystem solarSystem)
     {
         await AddBodyToDataTable(body, solarSystem);
@@ -215,7 +194,7 @@ public class BulkWriter
         {
             foreach (var ring in body.Rings)
             {
-                await AddRingToDataTable(ring, body);
+                await AddRingToDataTable(solarSystem, ring, body);
 
                 if (ring.Signals != null)
                 {
@@ -235,12 +214,12 @@ public class BulkWriter
         {
             foreach (var signalType in body.Signals.SignalTypes ?? [])
             {
-                await AddBodySignalTypeToDataTable(body, signalType);
+                await AddBodySignalTypeToDataTable(solarSystem, body, signalType);
             }
 
             foreach (var signalGenus in body.Signals.Genuses ?? [])
             {
-                await AddBodySignalGenusToDataTable(body, signalGenus);
+                await AddBodySignalGenusToDataTable(solarSystem, body, signalGenus);
             }
         }
     }
@@ -250,7 +229,7 @@ public class BulkWriter
         long? suffixId = suffix != null ? await SectorSuffixAccess.GetId(suffix) : null;
         long? postfixId = postfix != null ? await SectorPostfixAccess.GetId(postfix) : null;
 
-        int? subSector = CalculateSubSector(solarSystem.Coordinates?.X, solarSystem.Coordinates?.Y, solarSystem.Coordinates?.Z);
+        var (solarSystemRegionId, subSector) = await SolarSystemLocationCalculator.Calculate(solarSystem.Coordinates?.X, solarSystem.Coordinates?.Y, solarSystem.Coordinates?.Z);
 
         var row = SolarSystems.NewRow();
         row["Id"] = solarSystem.Id64;
@@ -276,24 +255,13 @@ public class BulkWriter
         row["PowerStateUndermining"] = ValueOrDbNull(solarSystem.PowerStateUndermining ?? 0);
         row["SectorSuffixId"] = ValueOrDbNull(suffixId);
         row["SectorPostfixId"] = ValueOrDbNull(postfixId);
-        row["SolarSystemRegionId"] = ValueOrDbNull(await SolarSystemRegionAccess.GetId(solarSystem.Coordinates?.X, solarSystem.Coordinates?.Y, solarSystem.Coordinates?.Z));
+        row["SolarSystemRegionId"] = ValueOrDbNull(solarSystemRegionId);
         row["SubSector"] = ValueOrDbNull(subSector);
 
         SolarSystems.Rows.Add(row);
     }
 
-    private int CalculateSubSector(double? x, double? y, double? z)
-    {
-        var sectorX = (int)Math.Floor((x ?? 0) / 100.0d);
-        var sectorY = (int)Math.Floor((y ?? 0) / 100.0d);
-        var sectorZ = (int)Math.Floor((z ?? 0) / 100.0d);
 
-        var subSectorX = (int)Math.Floor(((x ?? 0) - sectorX * 100) / 10.0d);
-        var subSectorY = (int)Math.Floor(((y ?? 0) - sectorY * 100) / 10.0d);
-        var subSectorZ = (int)Math.Floor(((z ?? 0) - sectorZ * 100) / 10.0d);
-
-        return subSectorX * 100 + subSectorY * 10 + subSectorZ;
-    }
 
     private async Task AddSectorPrefixToDataTable(SolarSystem solarSystem, string[] prefixes)
     {
@@ -363,7 +331,7 @@ public class BulkWriter
         }
 
         var row = Bodies.NewRow();
-        row["Id"] = body.Id64;
+        row["SolarSystemId"] = solarSystem.Id64;
         row["BodyId"] = body.BodyId;
         row["Name"] = ValueOrDbNull(bodyName);
         row["BodyTypeId"] = ValueOrDbNull(await BodyTypeAccess.GetId(body.Type));
@@ -399,7 +367,6 @@ public class BulkWriter
         row["DistanceToArrivalTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.DistanceToArrival));
         row["MeanAnomalyTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.MeanAnomaly));
         row["AscendingNodeTimestamp"] = ValueOrDbNull(OffsetToUnix(body.Timestamps?.AscendingNode));
-        row["SolarSystemId"] = solarSystem.Id64;
         row["SolarSystemNameIsPrefix"] = hasPrefix;
         row["Carbon"] = GetDictValueOrDbNull(body.Materials, "Carbon");
         row["Iron"] = GetDictValueOrDbNull(body.Materials, "Iron");
@@ -429,19 +396,21 @@ public class BulkWriter
         Bodies.Rows.Add(row);
     }
 
-    private async Task AddBodySignalTypeToDataTable(Body body, KeyValuePair<string, int> signalType)
+    private async Task AddBodySignalTypeToDataTable(SolarSystem solarSystem, Body body, KeyValuePair<string, int> signalType)
     {
         var row = BodySignalTypes.NewRow();
-        row["BodyId"] = body.Id64;
+        row["SolarSystemId"] = solarSystem.Id64;
+        row["BodyId"] = body.BodyId;
         row["SignalTypeId"] = ValueOrDbNull(await SignalTypeAccess.GetId(signalType.Key));
         row["Number"] = ValueOrDbNull(signalType.Value);
         BodySignalTypes.Rows.Add(row);
     }
 
-    private async Task AddBodySignalGenusToDataTable(Body body, string genus)
+    private async Task AddBodySignalGenusToDataTable(SolarSystem solarSystem, Body body, string genus)
     {
         var row = BodySignalGenuses.NewRow();
-        row["BodyId"] = body.Id64;
+        row["SolarSystemId"] = solarSystem.Id64;
+        row["BodyId"] = body.BodyId;
         row["SignalGenusId"] = ValueOrDbNull(await SignalGenusAccess.GetId(genus));
         BodySignalGenuses.Rows.Add(row);
     }
@@ -458,7 +427,7 @@ public class BulkWriter
     {
         var row = Stations.NewRow();
         await FillStationRows(station, row);
-        row["bodyId"] = body.Id64;
+        row["bodyId"] = body.BodyId;
         row["solarSystemId"] = solarSystem.Id64;
         Stations.Rows.Add(row);
     }
@@ -553,7 +522,7 @@ public class BulkWriter
         }
     }
 
-    private async Task AddRingToDataTable(Ring ring, Body body)
+    private async Task AddRingToDataTable(SolarSystem solarSystem, Ring ring, Body body)
     {
         var hasPrefix = ring.Name != null && ring.Name.StartsWith(body.Name!);
 
@@ -577,7 +546,8 @@ public class BulkWriter
         row["Id"] = ring.Id64;
         row["Name"] = ValueOrDbNull(ringName);
         row["BodyNameIsPrefix"] = hasPrefix;
-        row["BodyId"] = body.Id64;
+        row["SolarSystemId"] = solarSystem.Id64;
+        row["BodyId"] = body.BodyId;
         row["RingTypeId"] = ValueOrDbNull(await RingTypeAccess.GetId(ring.Type));
         row["Mass"] = ValueOrDbNull(ring.Mass);
         row["InnerRadius"] = ValueOrDbNull(ring.InnerRadius);
@@ -673,7 +643,7 @@ public class BulkWriter
 
             var transaction = connection.BeginTransaction();
 
-            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction);
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, transaction);
 
             bulkCopy.DestinationTableName = $"{schema}.Body";
             await bulkCopy.WriteToServerAsync(Bodies);

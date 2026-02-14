@@ -43,7 +43,7 @@ internal sealed class JournalUpdater : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing journal file {fileName}: {ex.Message}");
+            Console.WriteLine($"Error processing journal file {fileName}: {ex}");
         }
     }
 
@@ -75,7 +75,6 @@ internal sealed class JournalUpdater : IDisposable
                 await MarketSell.HandleMarketSell(line);
                 break;
             case "FSDJump":
-                ScanCache.Clear();
                 FSDCache.Clear();
                 await FSDJump.HandleFSDJump(line);
                 break;
@@ -92,9 +91,6 @@ internal sealed class JournalUpdater : IDisposable
             case "SAASignalsFound":
                 await SAASignalsFound.HandleSAASignalsFound(line);
                 break;
-            case "StartJump":
-                CheckScanCacheForUnpublishedNotableBodies();
-                break;
             default:
                 lineWasHandled = false;
                 break;
@@ -103,24 +99,6 @@ internal sealed class JournalUpdater : IDisposable
         if (lineWasHandled)
         {
             await UpdateLastUpdateTime(entryTime);
-        }
-    }
-
-    private static void CheckScanCacheForUnpublishedNotableBodies()
-    {
-        var allInCache = ScanCache.GetAll();
-
-        var unpublishedNotableBodies = allInCache.Where(sd => sd.IsNotable() && !sd.wasPrinted).ToArray();
-
-        if (unpublishedNotableBodies.Length == 0)
-            return;
-
-        Console.WriteLine("The following notable bodies were not printed:");
-        foreach (var scanData in unpublishedNotableBodies)
-        {
-            var scanMessage = ScanFormatter.Format(scanData);
-            Console.WriteLine(scanMessage);
-            scanData.wasPrinted = true;
         }
     }
 

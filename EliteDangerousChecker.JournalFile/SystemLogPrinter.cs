@@ -48,7 +48,7 @@ public class SystemLogPrinter
             {
                 var timestamp = line.Split('"', StringSplitOptions.RemoveEmptyEntries)[3].Replace("Z", "");
 
-                var dateTime = DateTime.Parse(timestamp).AddMilliseconds(-1);
+                var dateTime = DateTime.Parse(timestamp).AddSeconds(-1);
 
                 await JournalUpdater.UpdateLastUpdateTime(dateTime);
 

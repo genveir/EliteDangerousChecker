@@ -15,6 +15,12 @@ public class ScanModel
     [JsonPropertyName("BodyID")]
     public int? BodyId { get; set; }
 
+    [JsonPropertyName("SystemAddress")]
+    public long? SystemAddress { get; set; }
+
+    [JsonPropertyName("StarType")]
+    public string? StarType { get; set; }
+
     [JsonPropertyName("BodyName")]
     public string? BodyName { get; set; }
 

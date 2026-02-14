@@ -32,6 +32,7 @@ create table StationState (Id bigint primary key, Name nvarchar(32) not null);
 create table StationType (Id bigint primary key, Name nvarchar(32) not null);
 create table TerraformingState (Id bigint primary key, Name nvarchar(32) not null);
 create table VolcanismType (Id bigint primary key, Name nvarchar(32) not null);
+create table ExplorationStatus (Id bigint primary key, Name nvarchar(32) not null);
 
 -- Main Tables
 
@@ -90,8 +91,8 @@ create table SolarSystemPowerConflictProgress (
 alter table SolarSystemPowerConflictProgress add constraint PK_SolarSystemPowerConflictProgress primary key (SolarSystemId, PowerId);
 
 create table Body (
-	Id bigint primary key,
-	BodyId int,
+	SolarSystemId bigint not null,
+	BodyId int not null,
 	Name nvarchar(16),
 	BodyTypeId bigint,
 	BodySubTypeId bigint,
@@ -126,7 +127,6 @@ create table Body (
 	DistanceToArrivalTimestamp bigint,
 	MeanAnomalyTimestamp bigint,
 	AscendingNodeTimestamp bigint,
-	SolarSystemId bigint,
 	SolarSystemNameIsPrefix bit,
 	SignalsUpdateTime bigint,
 	Carbon float,
@@ -153,7 +153,12 @@ create table Body (
 	Tin float,
 	Mercury float,
 	Technetium float,
-	Polonium float);
+	Polonium float,
+	Discovered bigint,
+	Mapped bigint,
+	Landed bigint);
+
+alter table Body add constraint PK_Body primary key (SolarSystemId, BodyId);
 
 create table Station (
 	Id bigint primary key,
@@ -178,7 +183,7 @@ create table Station (
 	AllegianceId bigint,
 	Latitude float,
 	Longitude float,
-	BodyId bigint,
+	BodyId int,
 	SolarSystemId bigint);
 
 create table StationCommodities (
@@ -222,24 +227,27 @@ create table Ring (
 	Id bigint primary key,
 	Name nvarchar(32),
 	BodyNameIsPrefix bit,
-	BodyId bigint,
+	SolarSystemId bigint,
+	BodyId int,
 	RingTypeId bigint,
 	Mass float,
 	InnerRadius float,
 	OuterRadius float);
 
 create table BodySignalType (
-	BodyId bigint not null,
+	SolarSystemId bigint not null,
+	BodyId int not null,
 	SignalTypeId bigint not null,
 	Number int not null);
 
-alter table BodySignalType add constraint PK_BodySignalType primary key (BodyId, SignalTypeId);
+alter table BodySignalType add constraint PK_BodySignalType primary key (SolarSystemId, BodyId, SignalTypeId);
 
 create table BodySignalGenus (
-	BodyId bigint not null,
+	SolarSystemId bigint not null,
+	BodyId int not null,
 	SignalGenusId bigint not null);
 
-alter table BodySignalGenus add constraint PK_BodySignalGenus primary key (BodyId, SignalGenusId);
+alter table BodySignalGenus add constraint PK_BodySignalGenus primary key (SolarSystemId, BodyId, SignalGenusId);
 
 create table RingSignalType (
 	RingId bigint not null,
@@ -256,7 +264,7 @@ alter table RingSignalGenus add constraint PK_RingSignalGenus primary key (RingI
 
 create table SolarSystemRegion
 (
-	Id bigint not null primary key,
+	Id bigint not null primary key identity(1,1),
 	XSector int not null,
 	YSector int not null,
 	ZSector int not null);
@@ -371,6 +379,9 @@ alter table Body add constraint FK_Body_AtmosphereType foreign key (AtmosphereTy
 alter table Body add constraint FK_Body_TerraformingState foreign key (TerraformingStateId) references TerraformingState (Id);
 alter table Body add constraint FK_Body_ReserveLevel foreign key (ReserveLevelId) references ReserveLevel (Id);
 alter table Body add constraint FK_Body_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
+alter table Body add constraint FK_Body_Discovered foreign key (Discovered) references ExplorationStatus (Id);
+alter table Body add constraint FK_Body_Mapped foreign key (Mapped) references ExplorationStatus (Id);
+alter table Body add constraint FK_Body_Landed foreign key (Landed) references ExplorationStatus (Id);
 
 alter table Station add constraint FK_Station_ControllingFaction foreign key (ControllingFactionId) references Faction (Id);
 alter table Station add constraint FK_Station_ControllingFactionState foreign key (ControllingFactionStateId) references FactionState (Id);
@@ -379,7 +390,7 @@ alter table Station add constraint FK_Station_Government foreign key (Government
 alter table Station add constraint FK_Station_StationType foreign key (StationTypeId) references StationType (Id);
 alter table Station add constraint FK_Station_StateId foreign key (StateId) references StationState (Id);
 alter table Station add constraint FK_Station_Allegiance foreign key (AllegianceId) references Allegiance (Id);
-alter table Station add constraint FK_Station_Body foreign key (BodyId) references Body (Id);
+alter table Station add constraint FK_Station_Body foreign key (SolarSystemId, BodyId) references Body (SolarSystemId, BodyId);
 alter table Station add constraint FK_Station_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
 
 alter table StationCommodities add constraint FK_StationCommodities_Station foreign key (StationId) references Station (Id);
@@ -396,13 +407,13 @@ alter table StationsMappedToPlaceholderFaction add constraint FK_StationsMappedT
 alter table SectorPrefix add constraint FK_SectorPrefix_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
 alter table SectorPrefix add constraint FK_SectorPrefix_SectorPrefixWord foreign key (SectorPrefixWordId) references SectorPrefixWord (Id);
 
-alter table Ring add constraint FK_Ring_Body foreign key (BodyId) references Body (Id);
+alter table Ring add constraint FK_Ring_Body foreign key (SolarSystemId, BodyId) references Body (SolarSystemId, BodyId);
 alter table Ring add constraint FK_Ring_RingType foreign key (RingTypeId) references RingType (Id);
 
-alter table BodySignalType add constraint FK_BodySignalType_Body foreign key (BodyId) references Body (Id);
+alter table BodySignalType add constraint FK_BodySignalType_Body foreign key (SolarSystemId, BodyId) references Body (SolarSystemId, BodyId);
 alter table BodySignalType add constraint FK_BodySignalType_SignalType foreign key (SignalTypeId) references SignalType (Id);
 
-alter table BodySignalGenus add constraint FK_BodySignalGenus_Body foreign key (BodyId) references Body (Id);
+alter table BodySignalGenus add constraint FK_BodySignalGenus_Body foreign key (SolarSystemId, BodyId) references Body (SolarSystemId, BodyId);
 alter table BodySignalGenus add constraint FK_BodySignalGenus_SignalGenus foreign key (SignalGenusId) references SignalGenus (Id);
 
 alter table RingSignalType add constraint FK_RingSignalType_Ring foreign key (RingId) references Ring (Id);
@@ -417,14 +428,16 @@ alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Higher f
 -- Indexes
 
 create index IX_SolarSystem_ControllingPower on SolarSystem (ControllingPowerId)
-
 create index IX_SolarSystemPower_Power on SolarSystemPower (PowerId);
+create index IX_SolarSystem_Region on SolarSystem (SolarSystemRegionId, SubSector) include (X, Y, Z)
 
 create index IX_SolarSystemPowerConflictProgress_Power on SolarSystemPowerConflictProgress (PowerId);
 
+create index IX_SolarSystemRegion on SolarSystemRegion (XSector, YSector, ZSector);
+
 create index IX_Ring_RingType on Ring (RingTypeId)
-create index IX_Ring_Body on Ring (BodyId);
-create index IX_Ring_RingType_Body on Ring (RingTypeId, BodyId) include (Id) where RingTypeId = 2;
+create index IX_Ring_Body on Ring (SolarSystemId, BodyId);
+create index IX_Ring_RingType_Body on Ring (RingTypeId, SolarSystemId, BodyId) include (Id) where RingTypeId = 2;
 
 create index IX_Body_SolarSystem on Body (SolarSystemId);
 
@@ -451,7 +464,7 @@ return
 (
     select
         Prefix
-        + coalesce('-' + ssuf.Name, '')
+        + coalesce(' ' + ssuf.Name, '')
         + coalesce(' ' + spost.Name, '') as Name
     from (
         select
@@ -502,10 +515,9 @@ with EligibleSolarSystems as
         (
             select 1
             from 
-				Body b
-				join Ring r on r.BodyId = b.Id
+				Ring r
             where
-                b.SolarSystemId = ss.Id
+                r.SolarSystemId = ss.Id
                 and r.RingTypeId = 2 -- Rocky Rings
         )
 ),
@@ -623,7 +635,7 @@ Top50Results AS (
     from RankedStations rs
     join Station st on st.Id = rs.StationId
     left join Economy e on e.Id = st.PrimaryEconomyId
-    left join Body b on b.Id = st.BodyId
+    left join Body b on b.SolarSystemId = st.SolarSystemId and b.BodyId = st.BodyId
     order by
         rs.WeightedAverageSellPrice desc, 
         UpdateTime desc
@@ -809,6 +821,8 @@ drop table if exists upd.SolarSystemPower;
 drop table if exists upd.SolarSystemFaction;
 drop table if exists upd.SolarSystem;
 drop table if exists upd.Faction;
+drop table if exists upd.RingSignalType;
+drop table if exists upd.RingSignalGenus;
 
 create table upd.Faction (
 	Id bigint primary key,
@@ -818,9 +832,9 @@ create table upd.Faction (
 
 create table upd.SolarSystem (
 	Id bigint primary key,
-	X int,
-	Y int,
-	Z int,
+	X float,
+	Y float,
+	Z float,
 	AllegianceId bigint,
 	GovernmentId bigint,
 	PrimaryEconomyId bigint,
@@ -865,8 +879,8 @@ create table upd.SolarSystemPowerConflictProgress (
 alter table upd.SolarSystemPowerConflictProgress add constraint PK_SolarSystemPowerConflictProgress primary key (SolarSystemId, PowerId);
 
 create table upd.Body (
-	Id bigint primary key,
-	BodyId int,
+	SolarSystemId bigint not null,
+	BodyId int not null,
 	Name nvarchar(16),
 	BodyTypeId bigint,
 	BodySubTypeId bigint,
@@ -901,7 +915,6 @@ create table upd.Body (
 	DistanceToArrivalTimestamp bigint,
 	MeanAnomalyTimestamp bigint,
 	AscendingNodeTimestamp bigint,
-	SolarSystemId bigint,
 	SolarSystemNameIsPrefix bit,
 	SignalsUpdateTime bigint,
 	Carbon float,
@@ -930,6 +943,8 @@ create table upd.Body (
 	Technetium float,
 	Polonium float);
 
+alter table upd.Body add constraint PK_Body primary key (SolarSystemId, BodyId);
+
 create table upd.Station (
 	Id bigint primary key,
 	Name nvarchar(128),
@@ -953,7 +968,7 @@ create table upd.Station (
 	AllegianceId bigint,
 	Latitude float,
 	Longitude float,
-	BodyId bigint,
+	BodyId int,
 	SolarSystemId bigint);
 
 create table upd.StationCommodities (
@@ -994,27 +1009,33 @@ create table upd.SectorPrefix (
 alter table upd.SectorPrefix add constraint PK_SectorPrefix primary key (SolarSystemId, Sequence);
 
 create table upd.Ring (
-	Id bigint primary key,
-	Name nvarchar(32),
-	BodyNameIsPrefix bit,
-	BodyId bigint,
-	RingTypeId bigint,
-	Mass float,
-	InnerRadius float,
-	OuterRadius float);
+    Id bigint primary key,
+    Name nvarchar(32),
+    BodyNameIsPrefix bit,
+    SolarSystemId bigint,
+    BodyId int,
+    RingTypeId bigint,
+    Mass float,
+    InnerRadius float,
+    OuterRadius float
+);
 
 create table upd.BodySignalType (
-	BodyId bigint not null,
-	SignalTypeId bigint not null,
-	Number int not null);
+    SolarSystemId bigint not null,
+    BodyId int not null,
+    SignalTypeId bigint not null,
+    Number int not null
+);
 
-alter table upd.BodySignalType add constraint PK_BodySignalType primary key (BodyId, SignalTypeId);
+alter table upd.BodySignalType add constraint PK_BodySignalType primary key (SolarSystemId, BodyId, SignalTypeId);
 
 create table upd.BodySignalGenus (
-	BodyId bigint not null,
-	SignalGenusId bigint not null);
+    SolarSystemId bigint not null,
+    BodyId int not null,
+    SignalGenusId bigint not null
+);
 
-alter table upd.BodySignalGenus add constraint PK_BodySignalGenus primary key (BodyId, SignalGenusId);
+alter table upd.BodySignalGenus add constraint PK_BodySignalGenus primary key (SolarSystemId, BodyId, SignalGenusId);
 
 create table upd.RingSignalType (
 	RingId bigint not null,

@@ -1,5 +1,4 @@
-﻿using EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
-using EliteDangerousChecker.JournalFile.Shared;
+﻿using EliteDangerousChecker.Database.FromJournal;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.FSD;
 internal static class FSDJump
@@ -13,10 +12,34 @@ internal static class FSDJump
             return;
         }
 
-        var systemData = new StarSystemInfoWriter.SolarSystemDataModel(parsed.SystemAddress!.Value, parsed.StarSystem, null);
+        if (parsed.SystemAddress == null)
+        {
+            Console.WriteLine("FSDJump journal entry is missing SystemAddress");
+            return;
+        }
 
-        Console.WriteLine("JUMP INTO:");
-        await StarSystemInfoWriter.WriteSystemInfo([systemData]);
-        Console.WriteLine(ScanFormatter.GetHeader());
+        if (parsed.StarPos == null || parsed.StarPos.Length != 3)
+        {
+            Console.WriteLine("FSDJump journal entry has invalid StarPos");
+            return;
+        }
+
+        double x = parsed.StarPos[0];
+        double y = parsed.StarPos[1];
+        double z = parsed.StarPos[2];
+
+        if (parsed.StarSystem == null)
+        {
+            Console.WriteLine("FSDJump journal entry is missing StarSystem");
+            return;
+        }
+
+        var systemExists = await ExistsSolarSystem.Execute(parsed.SystemAddress.Value);
+        if (!systemExists)
+        {
+            await InsertSystemOnJump.Execute(parsed.SystemAddress.Value, x, y, z, parsed.StarSystem);
+        }
+
+        SystemChangeTracker.MarkSystemChange(parsed.SystemAddress.Value);
     }
 }

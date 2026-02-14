@@ -162,9 +162,8 @@ WHEN NOT MATCHED BY TARGET THEN
         var sql = @"
 MERGE INTO dbo.Body AS target
 USING upd.Body AS source
-ON target.Id = source.Id
+ON target.SolarSystemId = source.SolarSystemId AND target.BodyId = source.BodyId
 WHEN MATCHED THEN UPDATE SET
-    BodyId = source.BodyId,
     Name = source.Name,
     BodyTypeId = source.BodyTypeId,
     BodySubTypeId = source.BodySubTypeId,
@@ -199,7 +198,6 @@ WHEN MATCHED THEN UPDATE SET
     DistanceToArrivalTimestamp = source.DistanceToArrivalTimestamp,
     MeanAnomalyTimestamp = source.MeanAnomalyTimestamp,
     AscendingNodeTimestamp = source.AscendingNodeTimestamp,
-    SolarSystemId = source.SolarSystemId,
     SolarSystemNameIsPrefix = source.SolarSystemNameIsPrefix,
     SignalsUpdateTime = source.SignalsUpdateTime,
     Carbon = source.Carbon,
@@ -228,8 +226,8 @@ WHEN MATCHED THEN UPDATE SET
     Technetium = source.Technetium,
     Polonium = source.Polonium
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (Id, BodyId, Name, BodyTypeId, BodySubTypeId, DistanceToArrival, Mainstar, Age, SpectralClassId, LuminosityId, AbsoluteMagnitude, SolarMasses, SurfaceTemperature, RotationalPeriod, RotationalPeriodTidallyLocked, AxialTilt, OrbitalPeriod, SemiMajorAxis, OrbitalEccentricity, OrbitalInclination, ArgOfPeriapsis, MeanAnomaly, AscendingNode, IsLandable, Gravity, EarthMasses, Radius, SurfacePressure, VolcanismTypeId, AtmosphereTypeId, TerraformingStateId, ReserveLevelId, UpdateTime, DistanceToArrivalTimestamp, MeanAnomalyTimestamp, AscendingNodeTimestamp, SolarSystemId, SolarSystemNameIsPrefix, SignalsUpdateTime, Carbon, Iron, Nickel, Niobium, Phosphorus, Sulphur, Tellurium, Tungsten, Vanadium, Zinc, Zirconium, Germanium, Manganese, Molybdenum, Selenium, Yttrium, Cadmium, Ruthenium, Arsenic, Antimony, Chromium, Tin, Mercury, Technetium, Polonium)
-    VALUES (source.Id, source.BodyId, source.Name, source.BodyTypeId, source.BodySubTypeId, source.DistanceToArrival, source.Mainstar, source.Age, source.SpectralClassId, source.LuminosityId, source.AbsoluteMagnitude, source.SolarMasses, source.SurfaceTemperature, source.RotationalPeriod, source.RotationalPeriodTidallyLocked, source.AxialTilt, source.OrbitalPeriod, source.SemiMajorAxis, source.OrbitalEccentricity, source.OrbitalInclination, source.ArgOfPeriapsis, source.MeanAnomaly, source.AscendingNode, source.IsLandable, source.Gravity, source.EarthMasses, source.Radius, source.SurfacePressure, source.VolcanismTypeId, source.AtmosphereTypeId, source.TerraformingStateId, source.ReserveLevelId, source.UpdateTime, source.DistanceToArrivalTimestamp, source.MeanAnomalyTimestamp, source.AscendingNodeTimestamp, source.SolarSystemId, source.SolarSystemNameIsPrefix, source.SignalsUpdateTime, source.Carbon, source.Iron, source.Nickel, source.Niobium, source.Phosphorus, source.Sulphur, source.Tellurium, source.Tungsten, source.Vanadium, source.Zinc, source.Zirconium, source.Germanium, source.Manganese, source.Molybdenum, source.Selenium, source.Yttrium, source.Cadmium, source.Ruthenium, source.Arsenic, source.Antimony, source.Chromium, source.Tin, source.Mercury, source.Technetium, source.Polonium);";
+    INSERT (SolarSystemId, BodyId, Name, BodyTypeId, BodySubTypeId, DistanceToArrival, Mainstar, Age, SpectralClassId, LuminosityId, AbsoluteMagnitude, SolarMasses, SurfaceTemperature, RotationalPeriod, RotationalPeriodTidallyLocked, AxialTilt, OrbitalPeriod, SemiMajorAxis, OrbitalEccentricity, OrbitalInclination, ArgOfPeriapsis, MeanAnomaly, AscendingNode, IsLandable, Gravity, EarthMasses, Radius, SurfacePressure, VolcanismTypeId, AtmosphereTypeId, TerraformingStateId, ReserveLevelId, UpdateTime, DistanceToArrivalTimestamp, MeanAnomalyTimestamp, AscendingNodeTimestamp, SolarSystemNameIsPrefix, SignalsUpdateTime, Carbon, Iron, Nickel, Niobium, Phosphorus, Sulphur, Tellurium, Tungsten, Vanadium, Zinc, Zirconium, Germanium, Manganese, Molybdenum, Selenium, Yttrium, Cadmium, Ruthenium, Arsenic, Antimony, Chromium, Tin, Mercury, Technetium, Polonium)
+    VALUES (source.SolarSystemId, source.BodyId, source.Name, source.BodyTypeId, source.BodySubTypeId, source.DistanceToArrival, source.Mainstar, source.Age, source.SpectralClassId, source.LuminosityId, source.AbsoluteMagnitude, source.SolarMasses, source.SurfaceTemperature, source.RotationalPeriod, source.RotationalPeriodTidallyLocked, source.AxialTilt, source.OrbitalPeriod, source.SemiMajorAxis, source.OrbitalEccentricity, source.OrbitalInclination, source.ArgOfPeriapsis, source.MeanAnomaly, source.AscendingNode, source.IsLandable, source.Gravity, source.EarthMasses, source.Radius, source.SurfacePressure, source.VolcanismTypeId, source.AtmosphereTypeId, source.TerraformingStateId, source.ReserveLevelId, source.UpdateTime, source.DistanceToArrivalTimestamp, source.MeanAnomalyTimestamp, source.AscendingNodeTimestamp, source.SolarSystemNameIsPrefix, source.SignalsUpdateTime, source.Carbon, source.Iron, source.Nickel, source.Niobium, source.Phosphorus, source.Sulphur, source.Tellurium, source.Tungsten, source.Vanadium, source.Zinc, source.Zirconium, source.Germanium, source.Manganese, source.Molybdenum, source.Selenium, source.Yttrium, source.Cadmium, source.Ruthenium, source.Arsenic, source.Antimony, source.Chromium, source.Tin, source.Mercury, source.Technetium, source.Polonium);";
         using var conn = GetConnection();
         using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 60;
@@ -380,14 +378,15 @@ ON target.Id = source.Id
 WHEN MATCHED THEN UPDATE SET
     Name = source.Name,
     BodyNameIsPrefix = source.BodyNameIsPrefix,
+    SolarSystemId = source.SolarSystemId,
     BodyId = source.BodyId,
     RingTypeId = source.RingTypeId,
     Mass = source.Mass,
     InnerRadius = source.InnerRadius,
     OuterRadius = source.OuterRadius
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (Id, Name, BodyNameIsPrefix, BodyId, RingTypeId, Mass, InnerRadius, OuterRadius)
-    VALUES (source.Id, source.Name, source.BodyNameIsPrefix, source.BodyId, source.RingTypeId, source.Mass, source.InnerRadius, source.OuterRadius);";
+    INSERT (Id, Name, BodyNameIsPrefix, SolarSystemId, BodyId, RingTypeId, Mass, InnerRadius, OuterRadius)
+    VALUES (source.Id, source.Name, source.BodyNameIsPrefix, source.SolarSystemId, source.BodyId, source.RingTypeId, source.Mass, source.InnerRadius, source.OuterRadius);";
         using var conn = GetConnection();
         using var cmd = new SqlCommand(sql, conn);
         await cmd.ExecuteNonQueryAsync();
@@ -400,12 +399,12 @@ WHEN NOT MATCHED BY TARGET THEN
         var sql = @"
 MERGE INTO dbo.BodySignalType AS target
 USING upd.BodySignalType AS source
-ON target.BodyId = source.BodyId AND target.SignalTypeId = source.SignalTypeId
+ON target.SolarSystemId = source.SolarSystemId AND target.BodyId = source.BodyId AND target.SignalTypeId = source.SignalTypeId
 WHEN MATCHED THEN UPDATE SET
     Number = source.Number
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (BodyId, SignalTypeId, Number)
-    VALUES (source.BodyId, source.SignalTypeId, source.Number);";
+    INSERT (SolarSystemId, BodyId, SignalTypeId, Number)
+    VALUES (source.SolarSystemId, source.BodyId, source.SignalTypeId, source.Number);";
         using var conn = GetConnection();
         using var cmd = new SqlCommand(sql, conn);
         await cmd.ExecuteNonQueryAsync();
@@ -418,10 +417,10 @@ WHEN NOT MATCHED BY TARGET THEN
         var sql = @"
 MERGE INTO dbo.BodySignalGenus AS target
 USING upd.BodySignalGenus AS source
-ON target.BodyId = source.BodyId AND target.SignalGenusId = source.SignalGenusId
+ON target.SolarSystemId = source.SolarSystemId AND target.BodyId = source.BodyId AND target.SignalGenusId = source.SignalGenusId
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT (BodyId, SignalGenusId)
-    VALUES (source.BodyId, source.SignalGenusId);";
+    INSERT (SolarSystemId, BodyId, SignalGenusId)
+    VALUES (source.SolarSystemId, source.BodyId, source.SignalGenusId);";
         using var conn = GetConnection();
         using var cmd = new SqlCommand(sql, conn);
         await cmd.ExecuteNonQueryAsync();

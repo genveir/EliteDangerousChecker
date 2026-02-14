@@ -7,6 +7,9 @@ public class FSSBodySignalsModel
     [JsonPropertyName("timestamp")]
     public string? Timestamp { get; set; }
 
+    [JsonPropertyName("SystemAddress")]
+    public long? SystemAddress { get; set; }
+
     [JsonPropertyName("BodyID")]
     public int? BodyId { get; set; }
 

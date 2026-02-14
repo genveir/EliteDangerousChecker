@@ -90,7 +90,7 @@ internal static class DataTables
     public static DataTable SetupBodiesDataTable()
     {
         var table = new DataTable();
-        table.Columns.Add("Id", typeof(long));
+        table.Columns.Add("SolarSystemId", typeof(long));
         table.Columns.Add("BodyId", typeof(long));
         table.Columns.Add("Name", typeof(string));
         table.Columns.Add("BodyTypeId", typeof(long));
@@ -122,12 +122,12 @@ internal static class DataTables
         table.Columns.Add("AtmosphereTypeId", typeof(long));
         table.Columns.Add("TerraformingStateId", typeof(long));
         table.Columns.Add("ReserveLevelId", typeof(long));
-        table.Columns.Add("UpdateTime", typeof(string));
-        table.Columns.Add("DistanceToArrivalTimestamp", typeof(string));
-        table.Columns.Add("MeanAnomalyTimestamp", typeof(string));
-        table.Columns.Add("AscendingNodeTimestamp", typeof(string));
-        table.Columns.Add("SolarSystemId", typeof(long));
+        table.Columns.Add("UpdateTime", typeof(long));
+        table.Columns.Add("DistanceToArrivalTimestamp", typeof(long));
+        table.Columns.Add("MeanAnomalyTimestamp", typeof(long));
+        table.Columns.Add("AscendingNodeTimestamp", typeof(long));
         table.Columns.Add("SolarSystemNameIsPrefix", typeof(bool));
+        table.Columns.Add("SignalsUpdateTime", typeof(long));
         table.Columns.Add("Carbon", typeof(double));
         table.Columns.Add("Iron", typeof(double));
         table.Columns.Add("Nickel", typeof(double));
@@ -181,7 +181,7 @@ internal static class DataTables
         table.Columns.Add("AllegianceId", typeof(long));
         table.Columns.Add("Latitude", typeof(double));
         table.Columns.Add("Longitude", typeof(double));
-        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("BodyId", typeof(int));
         table.Columns.Add("SolarSystemId", typeof(long));
         return table;
     }
@@ -229,7 +229,8 @@ internal static class DataTables
         table.Columns.Add("Id", typeof(long));
         table.Columns.Add("Name", typeof(string));
         table.Columns.Add("BodyNameIsPrefix", typeof(bool));
-        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("SolarSystemId", typeof(long));
+        table.Columns.Add("BodyId", typeof(int));
         table.Columns.Add("RingTypeId", typeof(long));
         table.Columns.Add("Mass", typeof(double));
         table.Columns.Add("InnerRadius", typeof(double));
@@ -240,7 +241,8 @@ internal static class DataTables
     public static DataTable SetupBodySignalTypesDataTable()
     {
         DataTable table = new DataTable();
-        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("SolarSystemId", typeof(long));
+        table.Columns.Add("BodyId", typeof(int));
         table.Columns.Add("SignalTypeId", typeof(long));
         table.Columns.Add("Number", typeof(int));
         return table;
@@ -249,7 +251,8 @@ internal static class DataTables
     public static DataTable SetupBodySignalGenusesDataTable()
     {
         DataTable table = new DataTable();
-        table.Columns.Add("BodyId", typeof(long));
+        table.Columns.Add("SolarSystemId", typeof(long));
+        table.Columns.Add("BodyId", typeof(int));
         table.Columns.Add("SignalGenusId", typeof(long));
         return table;
     }
