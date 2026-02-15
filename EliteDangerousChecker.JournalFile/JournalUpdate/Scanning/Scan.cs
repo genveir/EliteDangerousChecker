@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
 internal static class Scan
 {
-    public static async Task HandleScan(SystemChangeTracker tracker, string line)
+    public static async Task HandleScan(ISystemChangeTracker tracker, string line)
     {
         var model = JsonSerializer.Deserialize<ScanModel>(line);
         if (model == null)

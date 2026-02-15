@@ -1,5 +1,4 @@
-﻿using EliteDangerousChecker.Database.FromJournal;
-using System.Text;
+﻿using System.Text;
 
 namespace EliteDangerousChecker.Output;
 internal static class BodyTableWriter
@@ -9,14 +8,14 @@ internal static class BodyTableWriter
         return $"{"Body Name",-30}{"Terraform",-15}{"PC",-10}{"Bio",-4}{"Disc",-5}{"Map",-5}{"Foot",-5}";
     }
 
-    public static string FormatBodyTable(string solarSystemName, GetBodyData.BodyData[] bodyData)
+    public static string FormatBodyTable(string solarSystemName, BodyData[] bodyData)
     {
         StringBuilder builder = new();
         builder.AppendLine(GetHeader());
 
         foreach (var body in bodyData)
         {
-            if (Notability.IsNotable(body))
+            if (Helper.IsNotable(body))
             {
                 builder.AppendLine(FormatBodyForTable(solarSystemName, body));
             }
@@ -24,7 +23,7 @@ internal static class BodyTableWriter
         return builder.ToString();
     }
 
-    private static string FormatBodyForTable(string solarSystemName, GetBodyData.BodyData bodyData)
+    private static string FormatBodyForTable(string solarSystemName, BodyData bodyData)
     {
         StringBuilder builder = new();
 
@@ -38,12 +37,10 @@ internal static class BodyTableWriter
 
         return builder.ToString();
     }
-    private static bool IsPrimaryStar(string name) =>
-        name.Length == 0 || name == " A";
 
     private static void AppendName(StringBuilder builder, string solarSystemName, string name)
     {
-        if (IsPrimaryStar(name))
+        if (Helper.IsPrimaryStar(name))
         {
             builder.Append($"{solarSystemName}{name}".PadRight(30));
             return;

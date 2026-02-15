@@ -9,9 +9,11 @@ OnKey="@OnKey"/>
 
 @code
 {
-    [Inject]
-    private ITermController _termController { get; set; } = null!;
+        [Inject]
+        private ITermController _termController { get; set; } = null!;
     private Xterm _terminal = null!;
+
+    private const string spaceLeft = "     ";
 
     private TerminalOptions _options = new TerminalOptions
         {
@@ -47,13 +49,12 @@ OnKey="@OnKey"/>
 
         await _terminal.WriteLine("");
 
-        List<string> toHandle = new List<string>(collectedData);
+        var toHandle = collectedData.SelectMany(cd => cd.Split(Environment.NewLine)).ToArray();
         collectedData.Clear();
 
         foreach (var line in toHandle)
         {
-            if (line != "")
-                await _terminal.WriteLine(line);
+            await _terminal.WriteLine(spaceLeft + line);
         }
 
         writing = false;

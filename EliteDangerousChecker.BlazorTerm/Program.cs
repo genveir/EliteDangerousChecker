@@ -13,6 +13,8 @@ public static class Program
 
         ConfigureServices(builder.Services);
 
+        builder.Services.AddHostedService<FullScanHandlerService>();
+
         builder.Services.AddHostedService<JournalFolderWatcherService>();
         builder.Services.AddHostedService<SystemChangeTrackerService>();
 

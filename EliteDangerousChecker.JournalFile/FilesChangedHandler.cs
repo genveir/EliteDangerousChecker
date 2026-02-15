@@ -2,14 +2,14 @@
 using EliteDangerousChecker.JournalFile.NavRouteUpdate;
 
 namespace EliteDangerousChecker.JournalFile;
-public sealed class FilesChangedHandler : IDisposable
+internal sealed class FilesChangedHandler : IDisposable
 {
     private record CurrentJournalUpdater(string FileName, JournalUpdater Updater);
 
     private CurrentJournalUpdater? currentJournalUpdater;
-    private readonly SystemChangeTracker tracker;
+    private readonly ISystemChangeTracker tracker;
 
-    public FilesChangedHandler(SystemChangeTracker tracker)
+    public FilesChangedHandler(ISystemChangeTracker tracker)
     {
         this.tracker = tracker;
     }

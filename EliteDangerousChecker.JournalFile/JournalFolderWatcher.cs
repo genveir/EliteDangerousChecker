@@ -1,6 +1,8 @@
-﻿namespace EliteDangerousChecker.JournalFile;
+﻿using EliteDangerousChecker.JournalFile.PublicAbstractions;
 
-public sealed class JournalFolderWatcher : IDisposable
+namespace EliteDangerousChecker.JournalFile;
+
+internal sealed class JournalFolderWatcher : IDisposable, IJournalFolderWatcher
 {
     const string JournalFolderPath = @"c:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous";
 

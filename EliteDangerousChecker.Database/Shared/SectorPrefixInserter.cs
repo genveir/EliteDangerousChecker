@@ -48,7 +48,7 @@ internal static class SectorPrefixInserter
 
         var sectorPrefixWordId = isNumber ? null : await SectorPrefixWordAccess.GetId(prefix);
 
-        var connection = DbAccess.GetOpenConnection();
+        using var connection = DbAccess.GetOpenConnection();
 
         var insertSql = @"
 insert into SectorPrefix (SolarSystemId, Sequence, SectorPrefixWordId, SectorPrefixNumber, StartWithDash, StartWithJ)

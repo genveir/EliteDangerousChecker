@@ -81,5 +81,10 @@ where
         return bodyData.SingleOrDefault();
     }
 
-    public record BodyData(int BodyId, string Name, string Discovered, string Mapped, string Landed, string TerraformingState, string BodyType, string SubType, int BioSignals);
+    public record BodyData(int BodyId, string Name, string Discovered, string Mapped, string Landed, string TerraformingState, string BodyType, string SubType, int BioSignals)
+    {
+        public LifeData[] LifeData { get; set; } = Array.Empty<LifeData>();
+    }
+
+    public record LifeData(string Genus, string Species, int Value, bool Scanned, bool First);
 }

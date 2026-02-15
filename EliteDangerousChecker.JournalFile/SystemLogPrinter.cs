@@ -5,7 +5,7 @@ public class SystemLogPrinter
 {
     const string JournalFolderPath = @"c:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous";
 
-    public static async Task PrintLogForCurrentSystem(SystemChangeTracker tracker)
+    public static async Task PrintLogForCurrentSystem(ISystemChangeTracker tracker)
     {
         var journalFiles = Directory.GetFiles(JournalFolderPath, "Journal.*.log")
             .OrderByDescending(f => f)

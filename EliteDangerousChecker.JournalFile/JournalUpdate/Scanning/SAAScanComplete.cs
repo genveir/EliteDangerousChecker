@@ -3,7 +3,7 @@
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
 internal static class SAAScanComplete
 {
-    public static async Task HandleSAAScanComplete(SystemChangeTracker tracker, string journalLine)
+    public static async Task HandleSAAScanComplete(ISystemChangeTracker tracker, string journalLine)
     {
         var parsed = System.Text.Json.JsonSerializer.Deserialize<SAAScanCompleteModel>(journalLine);
         if (parsed == null)

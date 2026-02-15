@@ -3,7 +3,7 @@
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.Planetary;
 internal static class Disembark
 {
-    public static async Task HandleDisembark(SystemChangeTracker tracker, string journalLine)
+    public static async Task HandleDisembark(ISystemChangeTracker tracker, string journalLine)
     {
         var parsed = System.Text.Json.JsonSerializer.Deserialize<DisembarkModel>(journalLine);
         if (parsed == null)

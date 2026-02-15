@@ -1,13 +1,12 @@
-﻿
-using EliteDangerousChecker.JournalFile.JournalUpdate;
+﻿using EliteDangerousChecker.JournalFile.PublicAbstractions;
 
 namespace EliteDangerousChecker.BlazorTerm.HostedServices;
 
 public class SystemChangeTrackerService : BackgroundService
 {
-    private readonly SystemChangeTracker tracker;
+    private readonly ISystemChangeTrackingService tracker;
 
-    public SystemChangeTrackerService(SystemChangeTracker tracker)
+    public SystemChangeTrackerService(ISystemChangeTrackingService tracker)
     {
         this.tracker = tracker;
     }

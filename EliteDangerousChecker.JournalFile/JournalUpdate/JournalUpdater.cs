@@ -10,10 +10,10 @@ internal sealed class JournalUpdater : IDisposable
     private static readonly string LastUpdateTimeFile = Path.Combine(JournalFilePath, "lastupdatetime.txt");
 
     private readonly StreamReader reader;
-    private readonly SystemChangeTracker tracker;
+    private readonly ISystemChangeTracker tracker;
     private readonly string fileName;
 
-    public JournalUpdater(SystemChangeTracker tracker, string fileName)
+    public JournalUpdater(ISystemChangeTracker tracker, string fileName)
     {
         reader = new StreamReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         this.tracker = tracker;
@@ -51,7 +51,7 @@ internal sealed class JournalUpdater : IDisposable
     }
 
     private static bool ShipHasBeenDismissed = false;
-    private static async Task HandleLine(SystemChangeTracker tracker, DateTime entryTime, string line)
+    internal static async Task HandleLine(ISystemChangeTracker tracker, DateTime entryTime, string line)
     {
         var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 

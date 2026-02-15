@@ -1,9 +1,10 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
+using EliteDangerousChecker.JournalFile.PublicAbstractions;
 using EliteDangerousChecker.Output;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
 
-public class SystemChangeTracker
+internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTrackingService
 {
     private readonly SystemWriter systemWriter;
 
@@ -70,8 +71,9 @@ public class SystemChangeTracker
                 {
                     Console.WriteLine("updating whole system");
                     var systemData = await GetBodyData.Execute(CurrentSystemAddress);
+                    var mappedData = systemData.Select(sd => new BodyData(sd)).ToArray();
 
-                    await systemWriter.WriteSystem(CurrentSystemAddress, CurrentBody, solarSystemName, systemData);
+                    await systemWriter.WriteSystem(CurrentSystemAddress, CurrentBody, solarSystemName, mappedData);
                 }
                 if (bodiesToUpdate.Length > 0)
                 {
@@ -87,7 +89,9 @@ public class SystemChangeTracker
                             continue;
                         }
 
-                        await systemWriter.UpdateBody(bodyData);
+                        var mappedData = new BodyData(bodyData);
+
+                        await systemWriter.UpdateBody(mappedData);
                     }
                 }
             }

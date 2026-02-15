@@ -7,7 +7,9 @@ public static class InsertSystemOnJump
 {
     public static async Task Execute(long systemAddress, double x, double y, double z, string systemName)
     {
-        var connection = DbAccess.GetOpenConnection();
+        Console.WriteLine($"Inserting system on jump for systemAddress {systemAddress} and systemName {systemName}");
+
+        using var connection = DbAccess.GetOpenConnection();
 
         var (prefixWords, suffix, postfix) = SolarSystemNameParser.Parse(systemName);
 

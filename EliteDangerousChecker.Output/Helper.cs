@@ -1,9 +1,7 @@
-﻿using EliteDangerousChecker.Database.FromJournal;
-
-namespace EliteDangerousChecker.Output;
-internal static class Notability
+﻿namespace EliteDangerousChecker.Output;
+internal static class Helper
 {
-    public static bool IsNotable(GetBodyData.BodyData bodyData) =>
+    public static bool IsNotable(BodyData bodyData) =>
         bodyData.TerraformingState == "Terraformable" ||
         bodyData.SubType == "Water world" ||
         bodyData.SubType == "Earth-like world" ||
@@ -11,6 +9,6 @@ internal static class Notability
         bodyData.BioSignals > 0 ||
         IsPrimaryStar(bodyData.Name);
 
-    private static bool IsPrimaryStar(string name) =>
+    public static bool IsPrimaryStar(string name) =>
         name.Length == 0 || name == " A";
 }

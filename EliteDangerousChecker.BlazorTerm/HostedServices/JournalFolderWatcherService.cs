@@ -1,13 +1,13 @@
 ﻿
-using EliteDangerousChecker.JournalFile;
+using EliteDangerousChecker.JournalFile.PublicAbstractions;
 
 namespace EliteDangerousChecker.BlazorTerm.HostedServices;
 
 public class JournalFolderWatcherService : BackgroundService
 {
-    private readonly JournalFolderWatcher journalFolderWatcher;
+    private readonly IJournalFolderWatcher journalFolderWatcher;
 
-    public JournalFolderWatcherService(JournalFolderWatcher journalFolderWatcher)
+    public JournalFolderWatcherService(IJournalFolderWatcher journalFolderWatcher)
     {
         this.journalFolderWatcher = journalFolderWatcher;
     }

@@ -8,6 +8,8 @@ public static class UpdateBodyFromScan
 {
     public static async Task Execute(long systemAddress, int bodyId, string name, bool? wasDiscovered, bool? wasMapped, bool? wasFootfalled, string? terraformState, string? planetClass, string? starType)
     {
+        Console.WriteLine($"Updating body from scan for systemAddress {systemAddress} and bodyId {bodyId}");
+
         if (planetClass != null && starType != null)
         {
             Console.WriteLine($"Scan for systemAddress {systemAddress} and bodyId {bodyId} has both planetclass and starType. Aborting update.");

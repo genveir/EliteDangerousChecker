@@ -3,7 +3,7 @@
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.FSD;
 internal static class FSDJump
 {
-    public static async Task HandleFSDJump(SystemChangeTracker tracker, string journalLine)
+    public static async Task HandleFSDJump(ISystemChangeTracker tracker, string journalLine)
     {
         var parsed = System.Text.Json.JsonSerializer.Deserialize<FSDJumpModel>(journalLine);
         if (parsed == null)
