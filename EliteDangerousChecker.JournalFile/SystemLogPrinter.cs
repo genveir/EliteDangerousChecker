@@ -7,8 +7,6 @@ public class SystemLogPrinter
 
     public static async Task PrintLogForCurrentSystem(SystemChangeTracker tracker)
     {
-        await Task.Delay(100);
-
         var journalFiles = Directory.GetFiles(JournalFolderPath, "Journal.*.log")
             .OrderByDescending(f => f)
             .ToArray();

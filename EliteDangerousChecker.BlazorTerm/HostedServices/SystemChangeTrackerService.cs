@@ -3,7 +3,7 @@ using EliteDangerousChecker.JournalFile.JournalUpdate;
 
 namespace EliteDangerousChecker.BlazorTerm.HostedServices;
 
-public class SystemChangeTrackerService : IHostedService
+public class SystemChangeTrackerService : BackgroundService
 {
     private readonly SystemChangeTracker tracker;
 
@@ -12,17 +12,15 @@ public class SystemChangeTrackerService : IHostedService
         this.tracker = tracker;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        tracker.StartOutputLoop();
-
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
+    public override Task StopAsync(CancellationToken cancellationToken)
     {
         tracker.Stop();
 
         return Task.CompletedTask;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await tracker.StartOutputLoop();
     }
 }

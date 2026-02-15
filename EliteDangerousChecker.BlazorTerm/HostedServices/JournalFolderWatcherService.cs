@@ -3,7 +3,7 @@ using EliteDangerousChecker.JournalFile;
 
 namespace EliteDangerousChecker.BlazorTerm.HostedServices;
 
-public class JournalFolderWatcherService : IHostedService
+public class JournalFolderWatcherService : BackgroundService
 {
     private readonly JournalFolderWatcher journalFolderWatcher;
 
@@ -12,15 +12,8 @@ public class JournalFolderWatcherService : IHostedService
         this.journalFolderWatcher = journalFolderWatcher;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        journalFolderWatcher.StartWatching(cancellationToken);
-
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
+        await journalFolderWatcher.StartWatching(stoppingToken);
     }
 }

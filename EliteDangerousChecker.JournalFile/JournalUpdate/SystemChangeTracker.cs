@@ -88,10 +88,11 @@ public class SystemChangeTracker
                         await systemWriter.UpdateBody(bodyData);
                     }
                 }
-
             }
             await Task.Delay(1000);
         }
+
+        Console.WriteLine("SystemChangeTracker stopped");
     }
 
     public void Stop()

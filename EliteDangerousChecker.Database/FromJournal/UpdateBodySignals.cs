@@ -13,9 +13,12 @@ public static class UpdateBodySignals
         var existsSql = "select case when exists (select 1 from Body where SolarSystemId = @systemAddress and BodyId = @bodyId) then 1 else 0 end";
         var bodyExists = await connection.ExecuteScalarAsync<bool>(existsSql, new { systemAddress, bodyId });
 
-        var solarSystemName = await GetSolarSystemName.Execute(systemAddress);
+        if (bodyName != null)
+        {
+            var solarSystemName = await GetSolarSystemName.Execute(systemAddress);
 
-        bodyName = bodyName.Replace(solarSystemName, "");
+            bodyName = bodyName.Replace(solarSystemName, "");
+        }
 
         if (!bodyExists)
         {
@@ -32,7 +35,8 @@ values (@systemAddress, @bodyId, @bodyName)";
         {
             var updateSignalSql = @"
 update BodySignalType
-set Number = @signalCount";
+set Number = @signalCount
+where SolarSystemId = @systemAddress and BodyId = @bodyId";
             await connection.ExecuteAsync(updateSignalSql, new { signalCount, systemAddress, bodyId, signalTypeId });
         }
         else
