@@ -17,7 +17,7 @@ internal static class BodyInfoWriter
         builder.AppendLine();
         builder.AppendLine(GetHeader());
 
-        foreach (var lifeData in bodyData.lifeData)
+        foreach (var lifeData in bodyData.LifeData)
         {
             builder.AppendLine(FormatLifeDataForTable(lifeData));
         }
@@ -27,11 +27,43 @@ internal static class BodyInfoWriter
 
     private static string GetHeader()
     {
-        return $"{"Genus",-15}{"Species",-15}{"Value",-14}{"Scanned",-8}{"First",-5}";
+        return $"{"Genus",-15}{"Species",-15}{"Value",-14}{"Bonus",-14}{"Scanned",-8}";
     }
 
     private static string FormatLifeDataForTable(LifeData lifeData)
     {
-        return $"{lifeData.Genus,-15}{lifeData.Species,-15}{lifeData.Value,-14}{lifeData.Scanned,-8}{lifeData.First,-5}";
+        var scanText = FormatScanned(lifeData.Scanned);
+        var speciesText = lifeData.Species?.Replace(lifeData.Genus, "").Trim();
+
+        return $"{lifeData.Genus,-15}{speciesText,-15}{lifeData.Value,-14}{lifeData.Bonus,-14}{scanText,-8}";
+    }
+
+    private static string FormatScanned(string status)
+    {
+        var builder = new StringBuilder();
+
+        if (status == "No")
+        {
+            builder.Append(ANSI_Colors.BrightYellow);
+            builder.Append("NO".PadRight(5));
+        }
+        else if (status == "Yes")
+        {
+            builder.Append(ANSI_Colors.BrightRed);
+            builder.Append("Yes".PadRight(5));
+        }
+        else if (status == "Commander")
+        {
+            builder.Append(ANSI_Colors.BrightGreen);
+            builder.Append("CMDR".PadRight(5));
+        }
+        else if (status == null)
+        {
+            builder.Append("Unseen".PadRight(5));
+        }
+
+        builder.Append(ANSI_Colors.Reset);
+
+        return builder.ToString();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EliteDangerousChecker.Database.FromJournal.Models;
 using EliteDangerousChecker.Database.Shared.ImmediateWrite;
 
 namespace EliteDangerousChecker.Database.FromJournal;
@@ -27,6 +28,4 @@ insert into BodySignalGenus (SolarSystemId, BodyId, SignalGenusId) values
             }
         }
     }
-
-    public record GenusWithLocalization(string Genus, string LocalizedName);
 }

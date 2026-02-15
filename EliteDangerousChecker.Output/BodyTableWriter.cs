@@ -5,7 +5,7 @@ internal static class BodyTableWriter
 {
     public static string GetHeader()
     {
-        return $"{"Body Name",-30}{"Terraform",-15}{"PC",-10}{"Bio",-4}{"Disc",-5}{"Map",-5}{"Foot",-5}";
+        return $"{"Body Name",-30}{"Terraform",-15}{"PC",-10}{"Bio",-8}{"Disc",-5}{"Map",-5}{"Foot",-5}{"ScanValue",-15}{"BioValue",15}";
     }
 
     public static string FormatBodyTable(string solarSystemName, BodyData[] bodyData)
@@ -30,10 +30,12 @@ internal static class BodyTableWriter
         AppendName(builder, solarSystemName, bodyData.Name);
         AppendTerraform(builder, bodyData.TerraformingState);
         AppendBodySubType(builder, bodyData.SubType, bodyData.BodyType);
-        AppendBioData(builder, bodyData.BioSignals);
+        AppendBioData(builder, bodyData.BioSignals, bodyData.LifeData.Sum(ld => ld.Scanned == "Commander" ? 1 : 0));
         AppendExploration(builder, bodyData.Discovered);
         AppendExploration(builder, bodyData.Mapped, bodyData.BodyType);
         AppendExploration(builder, bodyData.Landed, bodyData.BodyType);
+        builder.Append(bodyData.GetScanValue().ToString().PadRight(15));
+        builder.Append(bodyData.GetBioValue().ToString().PadLeft(15));
 
         return builder.ToString();
     }
@@ -107,7 +109,9 @@ internal static class BodyTableWriter
         };
     }
 
-    private static void AppendBioData(StringBuilder builder, int bioSignals)
+
+
+    private static void AppendBioData(StringBuilder builder, int bioSignals, int numScanned)
     {
         if (bioSignals == 0)
         {
@@ -115,8 +119,22 @@ internal static class BodyTableWriter
             return;
         }
 
-        builder.Append(ANSI_Colors.BrightGreen);
-        builder.Append(bioSignals.ToString().PadRight(4));
+        if (numScanned == 0)
+        {
+            builder.Append(ANSI_Colors.BrightRed);
+        }
+        else if (numScanned > 0 && numScanned < bioSignals)
+        {
+            builder.Append(ANSI_Colors.BrightYellow);
+        }
+        else
+        {
+            builder.Append(ANSI_Colors.BrightGreen);
+        }
+
+        var bioText = numScanned + " / " + bioSignals;
+
+        builder.Append(bioText.PadRight(8));
         builder.Append(ANSI_Colors.Reset);
     }
 

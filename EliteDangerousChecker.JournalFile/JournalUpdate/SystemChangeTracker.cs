@@ -26,16 +26,21 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
     public void MarkSystemChange(long newSystemAddress)
     {
         CurrentSystemAddress = newSystemAddress;
+        CurrentBody = 0;
         HasGeneralChanges = true;
     }
 
     public void MarkGeneralChange()
     {
+        Console.WriteLine($"SystemChangeTracker General Change marked");
+
         HasGeneralChanges = true;
     }
 
     public void MarkBodyChange(int bodyId)
     {
+        Console.WriteLine($"SystemChangeTracker Body Change marked ({bodyId})");
+
         BodyChanges.Add(bodyId);
         CurrentBody = bodyId;
     }

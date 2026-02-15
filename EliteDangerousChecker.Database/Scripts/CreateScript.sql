@@ -246,7 +246,9 @@ alter table BodySignalType add constraint PK_BodySignalType primary key (SolarSy
 create table BodySignalGenus (
 	SolarSystemId bigint not null,
 	BodyId int not null,
-	SignalGenusId bigint not null);
+	SignalGenusId bigint not null,
+	SpeciesId bigint not null,
+	Scanned bigint not null);
 
 alter table BodySignalGenus add constraint PK_BodySignalGenus primary key (SolarSystemId, BodyId, SignalGenusId);
 
@@ -269,16 +271,6 @@ create table SolarSystemRegion
 	XSector int not null,
 	YSector int not null,
 	ZSector int not null);
-
-create table BodySpecies
-(
-	SolarSystemId bigint not null,
-	BodyId int not null,
-	SignalGenusId bigint not null,
-	SpeciesId bigint not null,
-	Scanned bit not null)
-
-alter table BodySpecies add constraint PK_BodySpecies primary key (SolarSystemId, BodyId)
 
 -- Custom tables
 
@@ -426,15 +418,19 @@ alter table BodySignalType add constraint FK_BodySignalType_SignalType foreign k
 
 alter table BodySignalGenus add constraint FK_BodySignalGenus_Body foreign key (SolarSystemId, BodyId) references Body (SolarSystemId, BodyId);
 alter table BodySignalGenus add constraint FK_BodySignalGenus_SignalGenus foreign key (SignalGenusId) references SignalGenus (Id);
+alter table BodySignalGenus add constraint FK_BodySignalGenus_Species foreign key (SpeciesId) references Species (Id);
 
 alter table RingSignalType add constraint FK_RingSignalType_Ring foreign key (RingId) references Ring (Id);
 alter table RingSignalType add constraint FK_RingSignalType_SignalType foreign key (SignalTypeId) references SignalType (Id);
 
 alter table RingSignalGenus add constraint FK_RingSignalGenus_Ring foreign key (RingId) references Ring (Id);
 alter table RingSignalGenus add constraint FK_RingSignalGenus_SignalGenus foreign key (SignalGenusId) references SignalGenus (Id);
+alter table BodySignalGenus add constraint FK_BodySignalGenus_Scanned foreign key (Scanned) references ExplorationStatus (Id)
 
 alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Lower foreign key (LowerSolarSystemId) references SolarSystem (Id)
 alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Higher foreign key (HigherSolarSystemId) references SolarSystem (Id)
+
+
 
 -- Indexes
 

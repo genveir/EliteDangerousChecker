@@ -8,10 +8,12 @@ public static class JournalFileServiceRegistration
     public static void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<FilesChangedHandler>();
-        services.AddSingleton<ISystemChangeTracker, SystemChangeTracker>();
+        services.AddSingleton<SystemChangeTracker>();
 
         services.AddSingleton<IJournalFolderWatcher, JournalFolderWatcher>();
-        services.AddSingleton<ISystemChangeTrackingService, SystemChangeTracker>();
+
+        services.AddSingleton<ISystemChangeTracker>(svc => svc.GetRequiredService<SystemChangeTracker>());
+        services.AddSingleton<ISystemChangeTrackingService>(svc => svc.GetRequiredService<SystemChangeTracker>());
     }
 
     public static FullScanHandler[] FullScanHandlersToRun()

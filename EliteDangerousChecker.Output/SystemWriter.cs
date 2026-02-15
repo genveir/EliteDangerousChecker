@@ -51,8 +51,11 @@ public class SystemWriter
 
         var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, bodyData);
         await terminal.SendOutputLine(bodyTable);
+        await terminal.SendOutputLine($"    Total Scan Value: {bodyData.Sum(b => b.GetScanValue()) / 1000000.0d:N2}M");
+        await terminal.SendOutputLine($"    Total Bio Value:  {bodyData.Sum(b => b.GetBioValue()) / 1000000.0d:N2}M");
+        await terminal.SendOutputLine($"    Total Value:      {bodyData.Sum(b => b.GetScanValue() + b.GetBioValue()) / 1000000.0d:N2}M");
         await terminal.SendOutputLine(BAR);
-        await terminal.SendOutputLine(" ");
+        await terminal.SendOutputLine("");
 
         var bodyInfo = BodyInfoWriter.FormatBodyInfo(solarSystemName, bodyData.SingleOrDefault(bd => bd.BodyId == currentBodyId));
         await terminal.SendOutputLine(bodyInfo);
@@ -68,5 +71,5 @@ public class SystemWriter
         await terminal.SendOutputLine(" ");
     }
 
-    private const string BAR = "################################################################################";
+    private const string BAR = "################################################################################################################################################################";
 }

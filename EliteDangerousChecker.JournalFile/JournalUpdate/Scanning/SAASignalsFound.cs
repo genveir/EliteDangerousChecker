@@ -1,4 +1,5 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
+using EliteDangerousChecker.Database.FromJournal.Models;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
 internal static class SAASignalsFound
@@ -26,10 +27,10 @@ internal static class SAASignalsFound
 
         if (parsed.Genuses != null)
         {
-            List<UpdateBodySignalGenus.GenusWithLocalization> localizedGenuses = [];
+            List<GenusWithLocalization> localizedGenuses = [];
             foreach (var genus in parsed.Genuses)
             {
-                localizedGenuses.Add(new UpdateBodySignalGenus.GenusWithLocalization(genus.GenusName ?? "", genus.GenusLocalised ?? ""));
+                localizedGenuses.Add(new GenusWithLocalization(genus.GenusName ?? "", genus.GenusLocalised ?? ""));
             }
 
             await UpdateBodySignalGenus.Execute(parsed.SystemAddress.Value, parsed.BodyId.Value, parsed.BodyName, localizedGenuses.ToArray());

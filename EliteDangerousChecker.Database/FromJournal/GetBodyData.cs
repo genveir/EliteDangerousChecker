@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EliteDangerousChecker.Database.FromJournal.Models;
 
 namespace EliteDangerousChecker.Database.FromJournal;
 public static class GetBodyData
@@ -43,6 +44,15 @@ where
 
         var bodyData = await connection.QueryAsync<BodyData>(querySql, new { solarSystemId });
 
+        var lifeData = await GetLifeData.Execute(solarSystemId);
+        foreach (var body in bodyData)
+        {
+            if (lifeData.TryGetValue(body.BodyId, out var lifeDataForBody))
+            {
+                body.LifeData = lifeDataForBody;
+            }
+        }
+
         return bodyData.ToArray();
     }
 
@@ -78,13 +88,17 @@ where
 
         var bodyData = await connection.QueryAsync<BodyData>(querySql, new { solarSystemId, bodyId });
 
-        return bodyData.SingleOrDefault();
-    }
+        var body = bodyData.SingleOrDefault();
 
-    public record BodyData(int BodyId, string Name, string Discovered, string Mapped, string Landed, string TerraformingState, string BodyType, string SubType, int BioSignals)
-    {
-        public LifeData[] LifeData { get; set; } = Array.Empty<LifeData>();
-    }
+        if (body == null)
+        {
+            return null;
+        }
 
-    public record LifeData(string Genus, string Species, int Value, bool Scanned, bool First);
+        var lifeData = await GetLifeData.Execute(solarSystemId, bodyId);
+
+        body.LifeData = lifeData;
+
+        return body;
+    }
 }

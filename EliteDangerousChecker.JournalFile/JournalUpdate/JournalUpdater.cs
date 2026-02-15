@@ -77,6 +77,9 @@ internal sealed class JournalUpdater : IDisposable
             case "MarketSell":
                 await MarketSell.HandleMarketSell(line);
                 break;
+            case "SellOrganicData":
+                await SellOrganicData.HandleSellOrganicData(line);
+                break;
             case "FSDJump":
                 FSDCache.Clear();
                 await FSDJump.HandleFSDJump(tracker, line);
@@ -99,6 +102,9 @@ internal sealed class JournalUpdater : IDisposable
                 break;
             case "Disembark":
                 await Disembark.HandleDisembark(tracker, line);
+                break;
+            case "ScanOrganic":
+                await ScanOrganic.HandleScanOrganic(tracker, line);
                 break;
             default:
                 lineWasHandled = false;
