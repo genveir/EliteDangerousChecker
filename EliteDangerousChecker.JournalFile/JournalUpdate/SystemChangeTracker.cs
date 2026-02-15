@@ -65,10 +65,9 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
             if (hasChanges)
             {
                 bool general = HasGeneralChanges;
-                int[] bodiesToUpdate = general ? [] : BodyChanges.ToArray();
+                int[] bodiesToUpdate = general ? [] : BodyChanges.Distinct().ToArray();
 
                 HasGeneralChanges = false;
-                BodyChanges.Clear();
 
                 var solarSystemName = await GetSolarSystemName.Execute(CurrentSystemAddress);
 
@@ -84,6 +83,9 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 {
                     foreach (var bodyToUpdate in bodiesToUpdate)
                     {
+                        while (BodyChanges.Contains(bodyToUpdate))
+                            BodyChanges.Remove(bodyToUpdate);
+
                         Console.WriteLine($"updating body {bodyToUpdate}");
 
                         var bodyData = await GetBodyData.Execute(CurrentSystemAddress, bodyToUpdate);

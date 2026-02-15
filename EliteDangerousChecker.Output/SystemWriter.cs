@@ -26,6 +26,7 @@ public class SystemWriter
         }
 
         bodyData[bodyIndex] = updatedBody;
+        currentBodyId = updatedBody.BodyId;
 
         if (Helper.IsNotable(updatedBody))
         {

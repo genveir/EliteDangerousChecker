@@ -115,7 +115,7 @@ internal static class BodyTableWriter
     {
         if (bioSignals == 0)
         {
-            builder.Append("".PadRight(4));
+            builder.Append("".PadRight(8));
             return;
         }
 

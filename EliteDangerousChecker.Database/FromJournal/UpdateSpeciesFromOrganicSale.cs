@@ -10,20 +10,32 @@ public static class UpdateSpeciesFromOrganicSale
 
         var speciesId = await SpeciesAccess.GetId(species);
 
-        var updateSql = @"
+        var bonusClause = Bonus == 0 ? "" : ", Bonus = @Bonus";
+
+        var updateSql = @$"
 update 
     Species
 set 
-    Value = @Value, 
-    Bonus = @Bonus
+    Value = @Value{bonusClause}
 where 
     Id = @speciesId";
 
-        await connection.ExecuteAsync(updateSql, new
+        if (Bonus > 0)
         {
-            speciesId,
-            Value,
-            Bonus
-        });
+            await connection.ExecuteAsync(updateSql, new
+            {
+                speciesId,
+                Value,
+                Bonus
+            });
+        }
+        else
+        {
+            await connection.ExecuteAsync(updateSql, new
+            {
+                speciesId,
+                Value
+            });
+        }
     }
 }

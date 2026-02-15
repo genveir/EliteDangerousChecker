@@ -59,6 +59,17 @@ where
     public static async Task<BodyData?> Execute(long solarSystemId, int bodyId)
     {
         var querySql = @"
+with signals as (
+	select
+		bsg.Number
+	from
+		BodySignalType bsg
+		join SignalType st on st.Id = bsg.SignalTypeId
+	where
+		bsg.SolarSystemId = @solarSystemId
+		and bsg.BodyId = @bodyId
+		and st.Name = '$SAA_SignalType_Biological;'
+)
 select
 	b.BodyId,
 	b.Name,
@@ -77,12 +88,10 @@ from
 	left join TerraformingState ts on ts.Id = b.TerraformingStateId
 	left join BodyType bt on bt.Id = b.BodyTypeId
 	left join BodySubType bst on bst.Id = b.BodySubTypeId
-	left join BodySignalType sig on sig.SolarSystemId = b.SolarSystemId and sig.BodyId = b.BodyId
-	left join SignalType st on st.Id = sig.SignalTypeId
+	left join signals sig on 1 = 1
 where
 	b.SolarSystemId = @solarSystemId
-	and b.BodyId = @bodyId
-	and st.Name = '$SAA_SignalType_Biological;'";
+	and b.BodyId = @bodyId;";
 
         using var connection = DbAccess.GetOpenConnection();
 

@@ -17,7 +17,11 @@ internal static class SellOrganicData
             return;
         }
 
-        foreach (var bioData in parsed.BioData)
+        Console.WriteLine("Updating species from sold organic data");
+
+        var distinctBioData = parsed.BioData.DistinctBy(d => d.Species);
+
+        foreach (var bioData in distinctBioData)
         {
             if (string.IsNullOrEmpty(bioData.Species))
             {
