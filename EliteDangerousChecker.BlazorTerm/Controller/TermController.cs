@@ -1,4 +1,4 @@
-﻿using EliteDangerousChecker.JournalFile.JournalUpdate;
+﻿using EliteDangerousChecker.Output;
 
 namespace EliteDangerousChecker.BlazorTerm.Controller;
 

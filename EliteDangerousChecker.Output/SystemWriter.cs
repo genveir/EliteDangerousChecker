@@ -1,7 +1,7 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
 using System.Text;
 
-namespace EliteDangerousChecker.JournalFile.JournalUpdate;
+namespace EliteDangerousChecker.Output;
 public class SystemWriter
 {
     private string solarSystemName = "";
@@ -13,6 +13,8 @@ public class SystemWriter
     {
         this.terminal = terminal;
     }
+
+    public bool IsReadyToWrite() => terminal.IsInitialized;
 
     public async Task UpdateBody(GetBodyData.BodyData updatedBody)
     {
@@ -87,7 +89,7 @@ public class SystemWriter
     }
 
     private bool IsPrimaryStar(string name) =>
-        name.Length == 0 || (name == " A");
+        name.Length == 0 || name == " A";
 
     private void AppendName(StringBuilder builder, string solarSystemName, string name)
     {

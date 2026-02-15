@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EliteDangerousChecker.Database\EliteDangerousChecker.Database.csproj" />
-    <ProjectReference Include="..\EliteDangerousChecker.Output\EliteDangerousChecker.Output.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace EliteDangerousChecker.JournalFile.JournalUpdate;
+﻿namespace EliteDangerousChecker.Output;
 
 internal static class ANSI_Colors
 {

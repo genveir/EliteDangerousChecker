@@ -1,4 +1,5 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
+using EliteDangerousChecker.Output;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
 
@@ -6,7 +7,6 @@ public class SystemChangeTracker
 {
     private readonly SystemWriter systemWriter;
 
-    private readonly ITermController termController;
     private bool PrintedInitial = false;
 
     private bool HasGeneralChanges = false;
@@ -15,10 +15,9 @@ public class SystemChangeTracker
 
     private bool Running = true;
 
-    public SystemChangeTracker(SystemWriter systemWriter, ITermController termController)
+    public SystemChangeTracker(SystemWriter systemWriter)
     {
         this.systemWriter = systemWriter;
-        this.termController = termController;
     }
 
     public void MarkSystemChange(long newSystemAddress)
@@ -45,7 +44,7 @@ public class SystemChangeTracker
         {
             if (!PrintedInitial)
             {
-                if (termController.IsInitialized)
+                if (systemWriter.IsReadyToWrite())
                 {
                     PrintedInitial = true;
                     await SystemLogPrinter.PrintLogForCurrentSystem(this);

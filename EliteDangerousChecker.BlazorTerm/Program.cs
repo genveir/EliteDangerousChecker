@@ -1,7 +1,7 @@
 ﻿using EliteDangerousChecker.BlazorTerm.Controller;
 using EliteDangerousChecker.BlazorTerm.HostedServices;
 using EliteDangerousChecker.JournalFile;
-using EliteDangerousChecker.JournalFile.JournalUpdate;
+using EliteDangerousChecker.Output;
 
 namespace EliteDangerousChecker.BlazorTerm;
 
@@ -38,5 +38,6 @@ public static class Program
         services.AddSingleton<ITermController, TermController>();
 
         JournalFileServiceRegistration.RegisterServices(services);
+        OutputServiceRegistration.RegisterServices(services);
     }
 }

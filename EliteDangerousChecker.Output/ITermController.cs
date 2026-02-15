@@ -1,4 +1,4 @@
-﻿namespace EliteDangerousChecker.JournalFile.JournalUpdate;
+﻿namespace EliteDangerousChecker.Output;
 
 public interface ITermController
 {

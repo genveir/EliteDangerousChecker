@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\EliteDangerousChecker.JournalFile\EliteDangerousChecker.JournalFile.csproj" />
+	  <ProjectReference Include="..\EliteDangerousChecker.Output\EliteDangerousChecker.Output.csproj" />
 	</ItemGroup>
 
 </Project>

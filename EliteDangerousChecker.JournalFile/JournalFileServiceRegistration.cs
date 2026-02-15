@@ -9,6 +9,5 @@ public static class JournalFileServiceRegistration
         services.AddSingleton<FilesChangedHandler>();
         services.AddSingleton<JournalFolderWatcher>();
         services.AddSingleton<SystemChangeTracker>();
-        services.AddSingleton<SystemWriter>();
     }
 }

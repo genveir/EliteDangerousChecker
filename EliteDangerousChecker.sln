@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.Journ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.BlazorTerm", "EliteDangerousChecker.BlazorTerm\EliteDangerousChecker.BlazorTerm.csproj", "{A21C7541-EF64-4AF8-92F1-F416D290556A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDangerousChecker.Output", "EliteDangerousChecker.Output\EliteDangerousChecker.Output.csproj", "{8651DBDF-E6DD-4D3F-A0FC-E32C6819A095}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{A21C7541-EF64-4AF8-92F1-F416D290556A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A21C7541-EF64-4AF8-92F1-F416D290556A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A21C7541-EF64-4AF8-92F1-F416D290556A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8651DBDF-E6DD-4D3F-A0FC-E32C6819A095}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8651DBDF-E6DD-4D3F-A0FC-E32C6819A095}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8651DBDF-E6DD-4D3F-A0FC-E32C6819A095}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8651DBDF-E6DD-4D3F-A0FC-E32C6819A095}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
