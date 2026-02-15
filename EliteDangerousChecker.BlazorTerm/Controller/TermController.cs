@@ -37,7 +37,7 @@ public class TermController : ITermController
         await OnDataAvailable.Invoke(output);
     }
 
-    public async Task DoTick()
+    public async Task UpdateView()
     {
         if (OnTickComplete == null) return;
 

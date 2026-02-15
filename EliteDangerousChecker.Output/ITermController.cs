@@ -12,7 +12,7 @@ public interface ITermController
 
     Task SendOutputLine(string output);
 
-    Task DoTick();
+    Task UpdateView();
 
     Task Clear();
 }

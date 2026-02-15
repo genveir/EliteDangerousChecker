@@ -53,7 +53,7 @@ OnKey="@OnKey"/>
         foreach (var line in toHandle)
         {
             if (line != "")
-                await _terminal.WriteLine("  " + line);
+                await _terminal.WriteLine(line);
         }
 
         writing = false;
