@@ -2,31 +2,15 @@
 using EliteDangerousChecker.Database.Shared.ImmediateWrite;
 
 namespace EliteDangerousChecker.Database.FromJournal;
-public static class UpdateBodySignals
+public static class UpdateBodySignalType
 {
     public static async Task Execute(long systemAddress, long bodyId, string? bodyName, int signalCount)
     {
+        await EnsureBodyExists.Execute(systemAddress, bodyId, bodyName);
+
         using var connection = DbAccess.GetOpenConnection();
 
         var signalTypeId = await SignalTypeAccess.GetId("$SAA_SignalType_Biological;");
-
-        var existsSql = "select case when exists (select 1 from Body where SolarSystemId = @systemAddress and BodyId = @bodyId) then 1 else 0 end";
-        var bodyExists = await connection.ExecuteScalarAsync<bool>(existsSql, new { systemAddress, bodyId });
-
-        if (bodyName != null)
-        {
-            var solarSystemName = await GetSolarSystemName.Execute(systemAddress);
-
-            bodyName = bodyName.Replace(solarSystemName, "");
-        }
-
-        if (!bodyExists)
-        {
-            var insertBodySql = @"
-insert into Body (SolarSystemId, BodyId, Name)
-values (@systemAddress, @bodyId, @bodyName)";
-            await connection.ExecuteAsync(insertBodySql, new { systemAddress, bodyId, bodyName });
-        }
 
         var existsSignalSql = "select case when exists (select 1 from BodySignalType where SolarSystemId = @systemAddress and BodyId = @bodyId and SignalTypeId = @signalTypeId) then 1 else 0 end";
         var signalExists = await connection.ExecuteScalarAsync<bool>(existsSignalSql, new { systemAddress, bodyId, signalTypeId });

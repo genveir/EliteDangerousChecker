@@ -32,7 +32,7 @@ internal static class FssBodySignals
                     return;
                 }
 
-                await UpdateBodySignals.Execute(model.SystemAddress.Value, model.BodyId.Value, model.BodyName, signal.Count.Value);
+                await UpdateBodySignalType.Execute(model.SystemAddress.Value, model.BodyId.Value, model.BodyName, signal.Count.Value);
             }
         }
 

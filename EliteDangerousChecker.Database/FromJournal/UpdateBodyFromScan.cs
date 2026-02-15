@@ -44,13 +44,16 @@ public static class UpdateBodyFromScan
 
         if (bodyExists)
         {
+            var explorationDataSql = "select Discovered, Mapped, Landed from Body where SolarSystemId = @systemAddress and BodyId = @bodyId";
+            var explorationData = await connection.QuerySingleAsync<ExplorationData>(explorationDataSql, new { systemAddress, bodyId });
+
             await Update(
                 connection: connection,
                 systemAddress: systemAddress,
                 bodyId: bodyId,
-                discoveredId: discoveredValue,
-                mappedId: mappedValue,
-                footfalledId: footfalledValue,
+                discoveredId: explorationData.Discovered ?? discoveredValue,
+                mappedId: explorationData.Mapped ?? mappedValue,
+                footfalledId: explorationData.Landed ?? footfalledValue,
                 terraformStateId: terraFormStateId,
                 bodyTypeId: bodyTypeId,
                 bodySubTypeId: bodySubTypeId);
@@ -69,6 +72,13 @@ public static class UpdateBodyFromScan
                 bodyTypeId: bodyTypeId,
                 bodySubTypeId: bodySubTypeId);
         }
+    }
+
+    private class ExplorationData
+    {
+        public long? Discovered { get; set; }
+        public long? Mapped { get; set; }
+        public long? Landed { get; set; }
     }
 
     private static async Task Update(

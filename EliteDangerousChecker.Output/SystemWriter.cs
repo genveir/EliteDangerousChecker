@@ -3,6 +3,8 @@
 namespace EliteDangerousChecker.Output;
 public class SystemWriter
 {
+    private long currentSolarSystemId = 0;
+    private int currentBodyId = 0;
     private string solarSystemName = "";
     private GetBodyData.BodyData[] bodyData = [];
 
@@ -33,8 +35,10 @@ public class SystemWriter
         }
     }
 
-    public async Task WriteSystem(string solarSystemName, GetBodyData.BodyData[] bodyData)
+    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, string solarSystemName, GetBodyData.BodyData[] bodyData)
     {
+        this.currentSolarSystemId = currentSolarSystemId;
+        this.currentBodyId = currentBodyId;
         this.solarSystemName = solarSystemName;
         this.bodyData = bodyData;
 
@@ -45,8 +49,19 @@ public class SystemWriter
     {
         await terminal.Clear();
 
+        await WriteSystemHeader();
+
         var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, bodyData);
         await terminal.SendOutputLine(bodyTable);
         await terminal.UpdateView();
+    }
+
+    private async Task WriteSystemHeader()
+    {
+        await terminal.SendOutputLine($"System: {solarSystemName} ({currentSolarSystemId})");
+        var bar = new string(Enumerable.Repeat('#', 80).ToArray());
+
+        await terminal.SendOutputLine(bar);
+        await terminal.SendOutputLine(" ");
     }
 }

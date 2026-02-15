@@ -1,5 +1,6 @@
 ﻿using EliteDangerousChecker.JournalFile.JournalUpdate.FSD;
 using EliteDangerousChecker.JournalFile.JournalUpdate.Market;
+using EliteDangerousChecker.JournalFile.JournalUpdate.Planetary;
 using EliteDangerousChecker.JournalFile.JournalUpdate.Scanning;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
@@ -91,7 +92,13 @@ internal sealed class JournalUpdater : IDisposable
                 await FssBodySignals.HandleFssBodySignals(line);
                 break;
             case "SAASignalsFound":
-                await SAASignalsFound.HandleSAASignalsFound(line);
+                await SAASignalsFound.HandleSAASignalsFound(tracker, line);
+                break;
+            case "SAAScanComplete":
+                await SAAScanComplete.HandleSAAScanComplete(tracker, line);
+                break;
+            case "Disembark":
+                await Disembark.HandleDisembark(tracker, line);
                 break;
             default:
                 lineWasHandled = false;

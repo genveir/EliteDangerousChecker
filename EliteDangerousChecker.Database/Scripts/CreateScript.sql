@@ -26,7 +26,8 @@ create table SectorSuffix (Id bigint primary key, Name nvarchar(4) not null);
 create table Security (Id bigint primary key, Name nvarchar(32) not null);
 create table Service (Id bigint primary key, Name nvarchar(32) not null);
 create table SignalType (Id bigint primary key, Name nvarchar(32) not null);
-create table SignalGenus (Id bigint primary key, Name nvarchar(64) not null);
+create table SignalGenus (Id bigint primary key, Name nvarchar(64) not null, Localized nvarchar(32));
+create table Species (Id bigint not null primary key, Name nvarchar(32) not null, Value int, Bonus int)
 create table SpectralClass (Id bigint primary key, Name nvarchar(32) not null);
 create table StationState (Id bigint primary key, Name nvarchar(32) not null);
 create table StationType (Id bigint primary key, Name nvarchar(32) not null);
@@ -268,6 +269,16 @@ create table SolarSystemRegion
 	XSector int not null,
 	YSector int not null,
 	ZSector int not null);
+
+create table BodySpecies
+(
+	SolarSystemId bigint not null,
+	BodyId int not null,
+	SignalGenusId bigint not null,
+	SpeciesId bigint not null,
+	Scanned bit not null)
+
+alter table BodySpecies add constraint PK_BodySpecies primary key (SolarSystemId, BodyId)
 
 -- Custom tables
 

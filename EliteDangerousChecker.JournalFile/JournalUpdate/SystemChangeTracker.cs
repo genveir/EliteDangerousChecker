@@ -11,7 +11,9 @@ public class SystemChangeTracker
 
     private bool HasGeneralChanges = false;
     private List<int> BodyChanges = [];
+
     private long CurrentSystemAddress = 0;
+    private int CurrentBody = 0;
 
     private bool Running = true;
 
@@ -34,6 +36,7 @@ public class SystemChangeTracker
     public void MarkBodyChange(int bodyId)
     {
         BodyChanges.Add(bodyId);
+        CurrentBody = bodyId;
     }
 
     public async Task StartOutputLoop()
@@ -68,7 +71,7 @@ public class SystemChangeTracker
                     Console.WriteLine("updating whole system");
                     var systemData = await GetBodyData.Execute(CurrentSystemAddress);
 
-                    await systemWriter.WriteSystem(solarSystemName, systemData);
+                    await systemWriter.WriteSystem(CurrentSystemAddress, CurrentBody, solarSystemName, systemData);
                 }
                 if (bodiesToUpdate.Length > 0)
                 {
