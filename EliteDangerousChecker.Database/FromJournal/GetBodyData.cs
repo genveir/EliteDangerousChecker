@@ -27,7 +27,8 @@ select
 	ts.Name TerraformingState,
 	bt.Name BodyType,
 	bst.Name SubType,
-	isnull(sig.Number, 0) BioSignals
+	isnull(sig.Number, 0) BioSignals,
+	b.Mainstar
 from
 	Body b
 	left join ExplorationStatus esD on esD.Id = b.Discovered
@@ -79,7 +80,8 @@ select
 	ts.Name TerraformingState,
 	bt.Name BodyType,
 	bst.Name SubType,
-	isnull(sig.Number, 0) BioSignals
+	isnull(sig.Number, 0) BioSignals,
+	b.Mainstar
 from
 	Body b
 	left join ExplorationStatus esD on esD.Id = b.Discovered

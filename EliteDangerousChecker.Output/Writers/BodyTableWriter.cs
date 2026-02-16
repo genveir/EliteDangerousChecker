@@ -22,6 +22,7 @@ internal static class BodyTableWriter
                 builder.AppendLine(FormatBodyForTable(solarSystemName, body));
             }
         }
+        AppendBodyValues(builder, bodyData);
         return builder.ToString();
     }
 
@@ -29,7 +30,7 @@ internal static class BodyTableWriter
     {
         StringBuilder builder = new();
 
-        AppendName(builder, solarSystemName, bodyData.Name);
+        AppendName(builder, solarSystemName, bodyData);
         AppendTerraform(builder, bodyData.TerraformingState);
         AppendBodySubType(builder, bodyData.SubType, bodyData.BodyType);
         AppendBioData(builder, bodyData.BioSignals, bodyData.LifeData.Sum(ld => ld.Scanned == "Commander" ? 1 : 0));
@@ -42,14 +43,14 @@ internal static class BodyTableWriter
         return builder.ToString();
     }
 
-    private static void AppendName(StringBuilder builder, string solarSystemName, string name)
+    private static void AppendName(StringBuilder builder, string solarSystemName, BodyData bodyData)
     {
-        if (Helper.IsPrimaryStar(name))
+        if (bodyData.MainStar)
         {
-            builder.Append($"{solarSystemName}{name}".PadRight(30));
+            builder.Append($"{solarSystemName}{bodyData.Name}".PadRight(30));
             return;
         }
-        builder.Append(name.Trim().PadRight(30));
+        builder.Append(bodyData.Name.Trim().PadRight(30));
     }
 
     private static void AppendTerraform(StringBuilder builder, string terraformState)
@@ -174,5 +175,13 @@ internal static class BodyTableWriter
         }
 
         builder.Append(ANSI_Colors.Reset);
+    }
+
+    private static void AppendBodyValues(StringBuilder builder, BodyData[] bodyData)
+    {
+        builder.AppendLine($"    Total Scan Value: {bodyData.Sum(b => b.GetScanValue()) / 1000000.0d:N2}M");
+        builder.AppendLine($"    Total Bio Value:  {bodyData.Sum(b => b.GetBioValue()) / 1000000.0d:N2}M");
+        builder.AppendLine($"    Total Value:      {bodyData.Sum(b => b.GetScanValue() + b.GetBioValue()) / 1000000.0d:N2}M");
+        builder.AppendLine(Helper.BAR);
     }
 }

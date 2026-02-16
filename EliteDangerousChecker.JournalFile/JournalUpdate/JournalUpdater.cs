@@ -50,28 +50,13 @@ internal sealed class JournalUpdater : IDisposable
         }
     }
 
-    private static bool ShipHasBeenDismissed = false;
     internal static async Task HandleLine(ISystemChangeTracker tracker, DateTime entryTime, string line)
     {
         var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var eventType = splitLine[6];
 
-        if (eventType == "Liftoff")
-        {
-            if (splitLine[7] == "PlayerControlled" && splitLine[8] == ":false")
-            {
-                ShipHasBeenDismissed = true;
-            }
-        }
-
-        if (eventType == "Touchdown")
-        {
-            ShipHasBeenDismissed = false;
-        }
-
         bool lineWasHandled = true;
-
         switch (eventType)
         {
             case "MarketSell":
@@ -81,12 +66,7 @@ internal sealed class JournalUpdater : IDisposable
                 await SellOrganicData.HandleSellOrganicData(line);
                 break;
             case "FSDJump":
-                FSDCache.Clear();
                 await FSDJump.HandleFSDJump(tracker, line);
-                break;
-            case "FSDTarget":
-                if (ShipHasBeenDismissed) break;
-                await FSDTarget.HandleFSDTarget(line);
                 break;
             case "Scan":
                 await Scan.HandleScan(tracker, line);

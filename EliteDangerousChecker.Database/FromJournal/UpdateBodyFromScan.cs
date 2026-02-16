@@ -30,13 +30,21 @@ public static class UpdateBodyFromScan
         long? terraFormStateId = await TerraformingStateAccess.GetId(terraformState);
         long? bodySubTypeId = await BodySubTypeAccess.GetId(ConvertPlanetClass(planetClass));
         long bodyTypeId = (await BodyTypeAccess.GetId(bodyTypeName)).Value;
-        if (starType != null)
-        {
-            bodySubTypeId = await BodySubTypeAccess.GetId(starType);
-        }
+
+        bool mainStar = false;
 
         var solarSystemName = await GetSolarSystemName.Execute(systemAddress);
         name = name.Replace(solarSystemName, "");
+
+        if (starType != null)
+        {
+            bodySubTypeId = await BodySubTypeAccess.GetId(starType);
+
+            if (name.Trim() == "A" || name.Trim() == "")
+            {
+                mainStar = true;
+            }
+        }
 
         using var connection = DbAccess.GetOpenConnection();
 
@@ -72,7 +80,8 @@ public static class UpdateBodyFromScan
                 footfalledId: footfalledValue,
                 terraformStateId: terraFormStateId,
                 bodyTypeId: bodyTypeId,
-                bodySubTypeId: bodySubTypeId);
+                bodySubTypeId: bodySubTypeId,
+                mainStar: mainStar);
         }
     }
 
@@ -117,13 +126,14 @@ public static class UpdateBodyFromScan
         long? footfalledId,
         long? terraformStateId,
         long bodyTypeId,
-        long? bodySubTypeId)
+        long? bodySubTypeId,
+        bool mainStar)
     {
         var insertSql = @"
-            insert into Body (SolarSystemId, BodyId, Name, Discovered, Mapped, Landed, TerraformingStateId, BodyTypeId, BodySubTypeId) values
-            (@systemAddress, @bodyId, @name, @discoveredId, @mappedId, @footfalledId, @terraformStateId, @bodyTypeId, @bodySubTypeId)";
+            insert into Body (SolarSystemId, BodyId, Name, Discovered, Mapped, Landed, TerraformingStateId, BodyTypeId, BodySubTypeId, Mainstar) values
+            (@systemAddress, @bodyId, @name, @discoveredId, @mappedId, @footfalledId, @terraformStateId, @bodyTypeId, @bodySubTypeId, @mainStar)";
 
-        await connection.ExecuteAsync(insertSql, new { systemAddress, bodyId, name, discoveredId, mappedId, footfalledId, terraformStateId, bodyTypeId, bodySubTypeId });
+        await connection.ExecuteAsync(insertSql, new { systemAddress, bodyId, name, discoveredId, mappedId, footfalledId, terraformStateId, bodyTypeId, bodySubTypeId, mainStar });
     }
 
     private static string? ConvertPlanetClass(string? planetClass)

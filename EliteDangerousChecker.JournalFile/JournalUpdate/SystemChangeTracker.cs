@@ -1,4 +1,5 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
+using EliteDangerousChecker.JournalFile.NavRouteUpdate;
 using EliteDangerousChecker.JournalFile.PublicAbstractions;
 using EliteDangerousChecker.Output.Models;
 using EliteDangerousChecker.Output.Writers;
@@ -14,6 +15,8 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
     private bool HasGeneralChanges = false;
     private readonly List<int>[] BodyChanges = [[], []];
     private int WriteIndex = 0;
+
+    private bool HasNavRouteChanges = false;
 
     private long CurrentSystemAddress = 0;
     private int CurrentBody = 0;
@@ -37,6 +40,13 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
         Console.WriteLine($"SystemChangeTracker General Change marked");
 
         HasGeneralChanges = true;
+    }
+
+    public void MarkNavRouteChange()
+    {
+        Console.WriteLine($"SystemChangeTracker Nav Route Change marked");
+
+        HasNavRouteChanges = true;
     }
 
     public void MarkBodyChange(int bodyId)
@@ -65,29 +75,44 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 }
             }
 
-            var hasChanges = HasGeneralChanges || (BodyChanges[WriteIndex].Count > 0);
+            var hasChanges = HasGeneralChanges || (BodyChanges[WriteIndex].Count > 0) || HasNavRouteChanges;
 
             if (hasChanges)
             {
                 bool general = HasGeneralChanges;
-                WriteIndex = 1 - WriteIndex;
+                HasGeneralChanges = false;
 
+                WriteIndex = 1 - WriteIndex;
                 var bodiesToUpdate = BodyChanges[1 - WriteIndex].ToArray();
                 BodyChanges[1 - WriteIndex].Clear();
 
-                HasGeneralChanges = false;
+                bool hasNavRouteChanges = HasNavRouteChanges;
+                HasNavRouteChanges = false;
 
                 var solarSystemName = await GetSolarSystemName.Execute(CurrentSystemAddress);
+
+                NavData[] navRoute = [];
+                if (hasNavRouteChanges || general)
+                {
+                    navRoute = await NavRouteAccess.GetRoute();
+                }
 
                 if (general)
                 {
                     Console.WriteLine("updating whole system");
-                    var systemData = await GetBodyData.Execute(CurrentSystemAddress);
-                    var mappedData = systemData.Select(sd => new BodyData(sd)).ToArray();
 
-                    await systemWriter.WriteSystem(CurrentSystemAddress, CurrentBody, solarSystemName, mappedData);
+                    var systemData = await GetBodyData.Execute(CurrentSystemAddress);
+                    var mappedBodies = systemData.Select(sd => new BodyData(sd)).ToArray();
+
+                    await systemWriter.WriteSystem(CurrentSystemAddress, CurrentBody, solarSystemName, mappedBodies, navRoute);
                 }
-                if (bodiesToUpdate.Length > 0)
+                else if (hasNavRouteChanges)
+                {
+                    Console.WriteLine("updating nav route");
+
+                    await systemWriter.UpdateNavRoute(navRoute);
+                }
+                else if (bodiesToUpdate.Length > 0)
                 {
                     foreach (var bodyToUpdate in bodiesToUpdate)
                     {

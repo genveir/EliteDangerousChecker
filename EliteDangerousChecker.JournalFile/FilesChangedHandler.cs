@@ -1,5 +1,4 @@
 ﻿using EliteDangerousChecker.JournalFile.JournalUpdate;
-using EliteDangerousChecker.JournalFile.NavRouteUpdate;
 
 namespace EliteDangerousChecker.JournalFile;
 internal sealed class FilesChangedHandler : IDisposable
@@ -72,7 +71,7 @@ internal sealed class FilesChangedHandler : IDisposable
         {
             try
             {
-                await NavRouteUpdater.UpdateNavRoute(printRoute: true);
+                tracker.MarkNavRouteChange();
             }
             catch (Exception e)
             {

@@ -8,6 +8,7 @@ public class SystemWriter
     private int currentBodyId = 0;
     private string solarSystemName = "";
     private BodyData[] bodyData = [];
+    private NavData[] navData = [];
 
     private readonly ITermController terminal;
 
@@ -37,12 +38,20 @@ public class SystemWriter
         }
     }
 
-    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, string solarSystemName, BodyData[] bodyData)
+    public async Task UpdateNavRoute(NavData[] updatedNavData)
+    {
+        navData = updatedNavData;
+
+        await WriteSystem();
+    }
+
+    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, string solarSystemName, BodyData[] bodyData, NavData[] navData)
     {
         this.currentSolarSystemId = currentSolarSystemId;
         this.currentBodyId = currentBodyId;
         this.solarSystemName = solarSystemName;
         this.bodyData = bodyData;
+        this.navData = navData;
 
         await WriteSystem();
     }
@@ -51,14 +60,11 @@ public class SystemWriter
     {
         await terminal.Clear();
 
-        await WriteSystemHeader();
+        var systemHeader = SystemInfoWriter.FormatSystemHeader(solarSystemName, currentSolarSystemId, navData);
+        await terminal.SendOutputLine(systemHeader);
 
         var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, bodyData);
         await terminal.SendOutputLine(bodyTable);
-        await terminal.SendOutputLine($"    Total Scan Value: {bodyData.Sum(b => b.GetScanValue()) / 1000000.0d:N2}M");
-        await terminal.SendOutputLine($"    Total Bio Value:  {bodyData.Sum(b => b.GetBioValue()) / 1000000.0d:N2}M");
-        await terminal.SendOutputLine($"    Total Value:      {bodyData.Sum(b => b.GetScanValue() + b.GetBioValue()) / 1000000.0d:N2}M");
-        await terminal.SendOutputLine(BAR);
         await terminal.SendOutputLine("");
 
         var bodyInfo = BodyInfoWriter.FormatBodyInfo(solarSystemName, bodyData.SingleOrDefault(bd => bd.BodyId == currentBodyId));
@@ -66,14 +72,4 @@ public class SystemWriter
 
         await terminal.UpdateView();
     }
-
-    private async Task WriteSystemHeader()
-    {
-        await terminal.SendOutputLine($"System: {solarSystemName} ({currentSolarSystemId})");
-
-        await terminal.SendOutputLine(BAR);
-        await terminal.SendOutputLine(" ");
-    }
-
-    private const string BAR = "################################################################################################################################################################";
 }

@@ -9,8 +9,7 @@ internal static class Helper
         bodyData.SubType == "Earth-like world" ||
         bodyData.SubType == "Ammonia world" ||
         bodyData.BioSignals > 0 ||
-        IsPrimaryStar(bodyData.Name);
+        bodyData.MainStar;
 
-    public static bool IsPrimaryStar(string name) =>
-        name.Length == 0 || name == " A";
+    public const string BAR = "###############################################################################################################";
 }

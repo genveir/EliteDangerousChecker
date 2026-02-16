@@ -51,6 +51,7 @@ public class FullScanHandler
     {
         public void MarkBodyChange(int bodyId) { }
         public void MarkGeneralChange() { }
+        public void MarkNavRouteChange() { }
         public void MarkSystemChange(long newSystemAddress) { }
     }
 }
