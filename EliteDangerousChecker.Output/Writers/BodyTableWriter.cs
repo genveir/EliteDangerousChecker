@@ -179,9 +179,13 @@ internal static class BodyTableWriter
 
     private static void AppendBodyValues(StringBuilder builder, BodyData[] bodyData)
     {
-        builder.AppendLine($"    Total Scan Value: {bodyData.Sum(b => b.GetScanValue()) / 1000000.0d:N2}M");
-        builder.AppendLine($"    Total Bio Value:  {bodyData.Sum(b => b.GetBioValue()) / 1000000.0d:N2}M");
-        builder.AppendLine($"    Total Value:      {bodyData.Sum(b => b.GetScanValue() + b.GetBioValue()) / 1000000.0d:N2}M");
+        var scanValue = $"{bodyData.Sum(b => b.GetScanValue()) / 1000000.0d:N2}M";
+        var bioValue = $"{bodyData.Sum(b => b.GetBioValue()) / 1000000.0d:N2}M";
+        var totalValue = $"{bodyData.Sum(b => b.GetScanValue() + b.GetBioValue()) / 1000000.0d:N2}M";
+
+        builder.AppendLine($"    Total Scan Value:{scanValue,9}");
+        builder.AppendLine($"    Total Bio Value: {bioValue,9}");
+        builder.AppendLine($"    Total Value:     {totalValue,9}");
         builder.AppendLine(Helper.BAR);
     }
 }
