@@ -1,6 +1,6 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
 using EliteDangerousChecker.JournalFile.PublicAbstractions;
-using EliteDangerousChecker.Output;
+using EliteDangerousChecker.Output.Writers;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
 
@@ -11,7 +11,8 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
     private bool PrintedInitial = false;
 
     private bool HasGeneralChanges = false;
-    private List<int> BodyChanges = [];
+    private readonly List<int>[] BodyChanges = [[], []];
+    private int WriteIndex = 0;
 
     private long CurrentSystemAddress = 0;
     private int CurrentBody = 0;
@@ -41,7 +42,10 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
     {
         Console.WriteLine($"SystemChangeTracker Body Change marked ({bodyId})");
 
-        BodyChanges.Add(bodyId);
+        if (BodyChanges[WriteIndex].Contains(bodyId))
+            return;
+
+        BodyChanges[WriteIndex].Add(bodyId);
         CurrentBody = bodyId;
     }
 
@@ -60,12 +64,15 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 }
             }
 
-            var hasChanges = HasGeneralChanges || (BodyChanges.Count > 0);
+            var hasChanges = HasGeneralChanges || (BodyChanges[WriteIndex].Count > 0);
 
             if (hasChanges)
             {
                 bool general = HasGeneralChanges;
-                int[] bodiesToUpdate = general ? [] : BodyChanges.Distinct().ToArray();
+                WriteIndex = 1 - WriteIndex;
+
+                var bodiesToUpdate = BodyChanges[1 - WriteIndex].ToArray();
+                BodyChanges[1 - WriteIndex].Clear();
 
                 HasGeneralChanges = false;
 
@@ -83,9 +90,6 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 {
                     foreach (var bodyToUpdate in bodiesToUpdate)
                     {
-                        while (BodyChanges.Contains(bodyToUpdate))
-                            BodyChanges.Remove(bodyToUpdate);
-
                         Console.WriteLine($"updating body {bodyToUpdate}");
 
                         var bodyData = await GetBodyData.Execute(CurrentSystemAddress, bodyToUpdate);
