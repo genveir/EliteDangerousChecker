@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EliteDangerousChecker.Output.Writers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EliteDangerousChecker.Output;
 public static class OutputServiceRegistration

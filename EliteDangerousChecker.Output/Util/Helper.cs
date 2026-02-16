@@ -1,4 +1,6 @@
-﻿namespace EliteDangerousChecker.Output;
+﻿using EliteDangerousChecker.Output.Models;
+
+namespace EliteDangerousChecker.Output.Util;
 internal static class Helper
 {
     public static bool IsNotable(BodyData bodyData) =>

@@ -1,4 +1,4 @@
-﻿namespace EliteDangerousChecker.Output;
+﻿namespace EliteDangerousChecker.Output.Util;
 
 internal static class ANSI_Colors
 {

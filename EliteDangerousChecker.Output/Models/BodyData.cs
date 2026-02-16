@@ -1,4 +1,4 @@
-﻿namespace EliteDangerousChecker.Output;
+﻿namespace EliteDangerousChecker.Output.Models;
 public record BodyData(int BodyId, string Name, string Discovered, string Mapped, string Landed, string TerraformingState, string BodyType, string SubType, int BioSignals, LifeData[] LifeData)
 {
     public BodyData(Database.FromJournal.Models.BodyData input) : this(
@@ -27,15 +27,4 @@ public record BodyData(int BodyId, string Name, string Discovered, string Mapped
     {
         return LifeData.Sum(ld => ld.Value + ld.Bonus);
     }
-}
-
-public record LifeData(string Genus, string Species, int Value, int Bonus, string Scanned)
-{
-    public LifeData(Database.FromJournal.Models.LifeData input) : this(
-        input.Genus,
-        input.Species,
-        input.Value,
-        input.Bonus,
-        input.Scanned)
-    { }
 }

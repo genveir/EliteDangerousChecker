@@ -1,4 +1,7 @@
-﻿namespace EliteDangerousChecker.Output;
+﻿using EliteDangerousChecker.Output.Models;
+using EliteDangerousChecker.Output.Util;
+
+namespace EliteDangerousChecker.Output.Writers;
 public class SystemWriter
 {
     private long currentSolarSystemId = 0;

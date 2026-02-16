@@ -1,6 +1,8 @@
-﻿using System.Text;
+﻿using EliteDangerousChecker.Output.Models;
+using EliteDangerousChecker.Output.Util;
+using System.Text;
 
-namespace EliteDangerousChecker.Output;
+namespace EliteDangerousChecker.Output.Writers;
 internal static class BodyInfoWriter
 {
     public static string FormatBodyInfo(string solarSystemName, BodyData? bodyData)

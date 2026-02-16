@@ -1,5 +1,6 @@
 ﻿using EliteDangerousChecker.Database.FromJournal;
 using EliteDangerousChecker.JournalFile.PublicAbstractions;
+using EliteDangerousChecker.Output.Models;
 using EliteDangerousChecker.Output.Writers;
 
 namespace EliteDangerousChecker.JournalFile.JournalUpdate;
