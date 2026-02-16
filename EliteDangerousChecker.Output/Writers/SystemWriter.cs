@@ -23,12 +23,6 @@ public class SystemWriter
     {
         var bodyIndex = Array.FindIndex(bodyData, b => b.BodyId == updatedBody.BodyId);
 
-        if (bodyIndex == -1)
-        {
-            Console.WriteLine($"Unable to find body with id {updatedBody.BodyId} to update");
-            return;
-        }
-
         bodyData[bodyIndex] = updatedBody;
         currentBodyId = updatedBody.BodyId;
 
