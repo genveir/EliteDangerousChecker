@@ -86,6 +86,9 @@ internal sealed class JournalUpdater : IDisposable
             case "ScanOrganic":
                 await ScanOrganic.HandleScanOrganic(tracker, line);
                 break;
+            case "FSSDiscoveryScan":
+                await FSSDiscoveryScan.HandleFSSDiscoveryScan(tracker, line);
+                break;
             default:
                 lineWasHandled = false;
                 break;

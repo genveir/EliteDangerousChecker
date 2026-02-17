@@ -2,15 +2,15 @@
 @using EliteDangerousChecker.Output
 
 
-<Xterm @ref="_terminal" 
-Options="_options" 
-OnFirstRender="@OnFirstRender"
-OnKey="@OnKey"/>
+<Xterm @ref="_terminal"
+       Options="_options"
+       OnFirstRender="@OnFirstRender"
+       OnKey="@OnKey" />
 
 @code
 {
-        [Inject]
-        private ITermController _termController { get; set; } = null!;
+    [Inject]
+    private ITermController _termController { get; set; } = null!;
     private Xterm _terminal = null!;
 
     private const string spaceLeft = "     ";
@@ -28,7 +28,7 @@ OnKey="@OnKey"/>
 
     private async Task OnFirstRender()
     {
-        _termController.SetDataHandlers(OnDataAvailable, OnTickComplete, OnClear);
+        _termController.SetDataHandlers(OnDataAvailable, OnTickComplete);
 
         await Task.CompletedTask;
     }
@@ -60,11 +60,6 @@ OnKey="@OnKey"/>
         writing = false;
     }
 
-    public async Task OnClear()
-    {
-        await _terminal.Clear();
-    }
-
     private InputBuffer inputBuffer = new();
 
     private string input = "";
@@ -80,9 +75,9 @@ OnKey="@OnKey"/>
 
             input = beforeCursor.Substring(0, beforeCursor.Length - 1) + afterCursor;
             await _terminal.Write(
-                CURSOR_LEFT + 
-                (afterCursor.Length == 0 ? "" : afterCursor[0]) + 
-                (afterCursor.Length > 1 ? afterCursor.Substring(1): "") + 
+                CURSOR_LEFT +
+                (afterCursor.Length == 0 ? "" : afterCursor[0]) +
+                (afterCursor.Length > 1 ? afterCursor.Substring(1) : "") +
                 ' ' +
                 MoveCursorLeft(cursorOffset + 1));
         }

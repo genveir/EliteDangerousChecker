@@ -35,7 +35,7 @@ internal static class Scan
         {
             await UpdateBodyFromScan.Execute(model.SystemAddress.Value, model.BodyId.Value, model.BodyName, model.WasDiscovered, model.WasMapped, model.WasFootfalled, model.TerraformState, model.PlanetClass, model.StarType);
 
-            tracker.MarkGeneralChange();
+            tracker.MarkBodyChange(model.BodyId.Value);
         }
     }
 }

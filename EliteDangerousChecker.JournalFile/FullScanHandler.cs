@@ -50,6 +50,7 @@ public class FullScanHandler
     private class NopTracker : ISystemChangeTracker
     {
         public void MarkBodyChange(int bodyId) { }
+        public void MarkTotalBodyCountChange() { }
         public void MarkGeneralChange() { }
         public void MarkNavRouteChange() { }
         public void MarkSystemChange(long newSystemAddress) { }

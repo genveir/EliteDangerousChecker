@@ -17,6 +17,7 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
     private int WriteIndex = 0;
 
     private bool HasNavRouteChanges = false;
+    private bool HasTotalBodyChanges = false;
 
     private long CurrentSystemAddress = 0;
     private int CurrentBody = 0;
@@ -49,12 +50,21 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
         HasNavRouteChanges = true;
     }
 
+    public void MarkTotalBodyCountChange()
+    {
+        Console.WriteLine("SystemChangeTracker Total Body Change marked");
+
+        HasTotalBodyChanges = true;
+    }
+
     public void MarkBodyChange(int bodyId)
     {
         Console.WriteLine($"SystemChangeTracker Body Change marked ({bodyId})");
 
         if (BodyChanges[WriteIndex].Contains(bodyId))
-            return;
+        {
+            BodyChanges[WriteIndex].Remove(bodyId);
+        }
 
         BodyChanges[WriteIndex].Add(bodyId);
         CurrentBody = bodyId;
@@ -89,7 +99,7 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 bool hasNavRouteChanges = HasNavRouteChanges;
                 HasNavRouteChanges = false;
 
-                var solarSystemName = await GetSolarSystemName.Execute(CurrentSystemAddress);
+                var solarSystemNameAndBodyCount = await GetSolarSystemNameAndBodyCount.Execute(CurrentSystemAddress);
 
                 NavData[] navRoute = [];
                 if (hasNavRouteChanges || general)
@@ -99,36 +109,25 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
 
                 if (general)
                 {
-                    Console.WriteLine("updating whole system");
-
-                    var systemData = await GetBodyData.Execute(CurrentSystemAddress);
-                    var mappedBodies = systemData.Select(sd => new BodyData(sd)).ToArray();
-
-                    await systemWriter.WriteSystem(CurrentSystemAddress, CurrentBody, solarSystemName, mappedBodies, navRoute);
+                    await UpdateGeneral(solarSystemNameAndBodyCount.Name, solarSystemNameAndBodyCount.BodyCount, navRoute);
+                    continue;
                 }
-                else if (hasNavRouteChanges)
+
+                if (hasNavRouteChanges)
                 {
-                    Console.WriteLine("updating nav route");
-
-                    await systemWriter.UpdateNavRoute(navRoute);
+                    await UpdateNavRoute(navRoute);
                 }
-                else if (bodiesToUpdate.Length > 0)
+
+                if (HasTotalBodyChanges)
+                {
+                    await UpdateTotalBodies(solarSystemNameAndBodyCount.BodyCount);
+                }
+
+                if (bodiesToUpdate.Length > 0)
                 {
                     foreach (var bodyToUpdate in bodiesToUpdate)
                     {
-                        Console.WriteLine($"updating body {bodyToUpdate}");
-
-                        var bodyData = await GetBodyData.Execute(CurrentSystemAddress, bodyToUpdate);
-
-                        if (bodyData == null)
-                        {
-                            Console.WriteLine($"Unable to find body data for {bodyToUpdate}");
-                            continue;
-                        }
-
-                        var mappedData = new BodyData(bodyData);
-
-                        await systemWriter.UpdateBody(mappedData);
+                        await UpdateBody(bodyToUpdate);
                     }
                 }
             }
@@ -136,6 +135,61 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
         }
 
         Console.WriteLine("SystemChangeTracker stopped");
+    }
+
+    private async Task UpdateGeneral(string systemName, int? bodyCount, NavData[] navRoute)
+    {
+        Console.WriteLine("updating whole system");
+
+        var systemData = await GetBodyData.Execute(CurrentSystemAddress);
+        var mappedBodies = systemData.Select(sd => new BodyData(sd)).ToArray();
+
+        await systemWriter.WriteSystem(
+            currentSolarSystemId: CurrentSystemAddress,
+            currentBodyId: CurrentBody,
+            totalBodies: bodyCount,
+            solarSystemName: systemName,
+            bodyData: mappedBodies,
+            navData: navRoute);
+    }
+
+    private async Task UpdateNavRoute(NavData[] navRoute)
+    {
+        Console.WriteLine("updating nav route");
+
+        await systemWriter.UpdateNavRoute(navRoute);
+    }
+
+    private async Task UpdateTotalBodies(int? totalBodies)
+    {
+        Console.WriteLine("updating total body count");
+
+        await GetSolarSystemNameAndBodyCount.Execute(CurrentSystemAddress);
+
+        if (totalBodies == null)
+        {
+            Console.WriteLine($"Unable to find body count for system address {CurrentSystemAddress}. Aborting total body count update.");
+            return;
+        }
+
+        await systemWriter.UpdateTotalBodies(totalBodies.Value);
+    }
+
+    private async Task UpdateBody(int bodyToUpdate)
+    {
+        Console.WriteLine($"updating body {bodyToUpdate}");
+
+        var bodyData = await GetBodyData.Execute(CurrentSystemAddress, bodyToUpdate);
+
+        if (bodyData == null)
+        {
+            Console.WriteLine($"Unable to find body data for {bodyToUpdate}");
+            return;
+        }
+
+        var mappedData = new BodyData(bodyData);
+
+        await systemWriter.UpdateBody(mappedData);
     }
 
     public void Stop()

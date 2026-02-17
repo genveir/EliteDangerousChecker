@@ -2,7 +2,7 @@
 
 public interface ITermController
 {
-    void SetDataHandlers(Func<string, Task> onDataAvailable, Func<Task> onTickComplete, Func<Task> onClear);
+    void SetDataHandlers(Func<string, Task> onDataAvailable, Func<Task> onTickComplete);
 
     public bool IsInitialized { get; }
 
@@ -13,6 +13,4 @@ public interface ITermController
     Task SendOutputLine(string output);
 
     Task UpdateView();
-
-    Task Clear();
 }

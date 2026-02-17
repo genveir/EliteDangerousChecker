@@ -6,9 +6,14 @@ public class SystemWriter
 {
     private long currentSolarSystemId = 0;
     private int currentBodyId = 0;
+    private int? totalBodies = null;
     private string solarSystemName = "";
-    private BodyData[] bodyData = [];
+    private List<BodyData> bodyData = [];
     private NavData[] navData = [];
+
+    private int KnownBodies => bodyData
+        .Where(bd => bd.BodyType == "Planet" || bd.BodyType == "Star")
+        .Count();
 
     private readonly ITermController terminal;
 
@@ -21,14 +26,27 @@ public class SystemWriter
 
     public async Task UpdateBody(BodyData updatedBody)
     {
-        var bodyIndex = Array.FindIndex(bodyData, b => b.BodyId == updatedBody.BodyId);
+        var bodyIndex = bodyData.FindIndex(b => b.BodyId == updatedBody.BodyId);
 
-        bodyData[bodyIndex] = updatedBody;
+        bool wasKnown = bodyIndex != -1;
+        if (bodyIndex == -1)
+        {
+            bodyData.Add(updatedBody);
+        }
+        else
+        {
+            bodyData[bodyIndex] = updatedBody;
+        }
+
         currentBodyId = updatedBody.BodyId;
 
         if (Helper.IsNotable(updatedBody))
         {
             await WriteSystem();
+        }
+        else if (!wasKnown)
+        {
+            await UpdateBodyCount();
         }
     }
 
@@ -39,25 +57,40 @@ public class SystemWriter
         await WriteSystem();
     }
 
-    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, string solarSystemName, BodyData[] bodyData, NavData[] navData)
+    public async Task UpdateTotalBodies(int totalBodies)
+    {
+        this.totalBodies = totalBodies;
+
+        await WriteSystem();
+    }
+
+    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, int? totalBodies, string solarSystemName, BodyData[] bodyData, NavData[] navData)
     {
         this.currentSolarSystemId = currentSolarSystemId;
         this.currentBodyId = currentBodyId;
+        this.totalBodies = totalBodies;
         this.solarSystemName = solarSystemName;
-        this.bodyData = bodyData;
+        this.bodyData = [.. bodyData];
         this.navData = navData;
 
         await WriteSystem();
     }
 
+    private async Task UpdateBodyCount()
+    {
+        var updateString = SystemInfoWriter.FormatBodyUpdate(1, totalBodies, KnownBodies);
+        await terminal.SendOutputLine(updateString);
+        await terminal.UpdateView();
+    }
+
     private async Task WriteSystem()
     {
-        await terminal.Clear();
+        await terminal.SendOutputLine(Helper.ClearTerminal());
 
-        var systemHeader = SystemInfoWriter.FormatSystemHeader(solarSystemName, currentSolarSystemId, navData);
+        var systemHeader = SystemInfoWriter.FormatSystemHeader(solarSystemName, currentSolarSystemId, totalBodies, KnownBodies, navData);
         await terminal.SendOutputLine(systemHeader);
 
-        var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, bodyData);
+        var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, [.. bodyData]);
         await terminal.SendOutputLine(bodyTable);
         await terminal.SendOutputLine("");
 

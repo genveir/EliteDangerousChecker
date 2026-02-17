@@ -6,14 +6,13 @@ public class TermController : ITermController
 {
     public List<string> Commands { get; } = [];
 
-    public void SetDataHandlers(Func<string, Task> onDataAvailable, Func<Task> onTickComplete, Func<Task> onClear)
+    public void SetDataHandlers(Func<string, Task> onDataAvailable, Func<Task> onTickComplete)
     {
         OnDataAvailable = onDataAvailable;
         OnTickComplete = onTickComplete;
-        OnClear = onClear;
     }
 
-    public bool IsInitialized => OnDataAvailable != null && OnTickComplete != null && OnClear != null;
+    public bool IsInitialized => OnDataAvailable != null && OnTickComplete != null;
 
     public string[] GetCommands()
     {
@@ -37,21 +36,17 @@ public class TermController : ITermController
         await OnDataAvailable.Invoke(output);
     }
 
+    private string TimeOnly => DateTime.Now.ToString("[HH:mm:ss] ");
+
     public async Task UpdateView()
     {
         if (OnTickComplete == null) return;
 
+        Console.WriteLine($"{TimeOnly}writing data");
+
         await OnTickComplete.Invoke();
-    }
-
-    public async Task Clear()
-    {
-        if (OnClear == null) return;
-
-        await OnClear.Invoke();
     }
 
     public Func<string, Task>? OnDataAvailable;
     public Func<Task>? OnTickComplete;
-    public Func<Task>? OnClear;
 }

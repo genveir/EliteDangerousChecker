@@ -12,4 +12,8 @@ internal static class Helper
         bodyData.MainStar;
 
     public const string BAR = "###############################################################################################################";
+
+    public static string ClearTerminal() => "\u001b[2J";
+
+    public static string SetCursorPosition(int left, int top) => $"\u001b[{top};{left}H";
 }
