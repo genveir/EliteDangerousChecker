@@ -1,4 +1,4 @@
-﻿using EliteDangerousChecker.Database.DirectQueries;
+﻿using EliteDangerousChecker.Database.FromJournal;
 using EliteDangerousChecker.Database.Spansh;
 using Microsoft.AspNetCore.Mvc;
 
@@ -62,7 +62,7 @@ public class FindSystemController : ControllerBase
             {
                 var result = await jsonReader.ReadSystem();
 
-                var exists = await GetSolarSystemExistsById.Execute(result.System!.Id64);
+                var exists = await ExistsSolarSystem.Execute(result.System!.Id64);
 
                 if (!exists)
                 {

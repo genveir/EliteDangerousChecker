@@ -24,8 +24,14 @@ public record BodyData(int BodyId, string Name, string Discovered, string Mapped
         return ScanValueTable.GetScanValue(SubType, Terraformable, firstDiscovery, mapped);
     }
 
-    public int GetBioValue()
+    public (int uncertainty, int uncertaintyValue, int guaranteedValue) GetBioValue()
     {
-        return LifeData.Sum(ld => ld.Value + ld.Bonus);
+        var lifeDataToConsider = LifeData.Where(ld => ld.Scanned == "Commander");
+
+        var uncertainty = lifeDataToConsider.Count(ld => ld.Value == 0);
+        var uncertaintyValue = uncertainty * 5000000;
+        var guaranteedValue = lifeDataToConsider.Sum(ld => ld.Value + ld.Bonus);
+
+        return (uncertainty, uncertaintyValue, guaranteedValue);
     }
 }

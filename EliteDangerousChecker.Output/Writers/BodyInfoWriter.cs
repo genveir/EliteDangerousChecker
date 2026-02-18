@@ -37,7 +37,10 @@ internal static class BodyInfoWriter
         var scanText = FormatScanned(lifeData.Scanned);
         var speciesText = lifeData.Species?.Replace(lifeData.Genus, "").Trim();
 
-        return $"{lifeData.Genus,-15}{speciesText,-15}{lifeData.Value,-14}{lifeData.Bonus,-14}{scanText,-8}";
+        var lifeValueText = lifeData.Value == 0 ? "1000000+" : lifeData.Value.ToString();
+        var bonusValueText = lifeData.Bonus == 0 ? "4000000+" : lifeData.Bonus.ToString();
+
+        return $"{lifeData.Genus,-15}{speciesText,-15}{lifeValueText,-14}{bonusValueText,-14}{scanText,-8}";
     }
 
     private static string FormatScanned(string status)

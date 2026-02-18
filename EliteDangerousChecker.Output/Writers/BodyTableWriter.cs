@@ -7,7 +7,7 @@ internal static class BodyTableWriter
 {
     public static string GetHeader()
     {
-        return $"{"Body Name",-30}{"Terraform",-15}{"PC",-10}{"Bio",-8}{"Disc",-5}{"Map",-5}{"Foot",-5}{"ScanValue",-15}{"BioValue",15}";
+        return $"{"Body Name",-30}{"Terraform",-15}{"PC",-10}{"Bio",-8}{"Disc",-5}{"Map",-5}{"Foot",-5}{"ScanValue",-15}{"BioValue",-15}";
     }
 
     public static string FormatBodyTable(string solarSystemName, BodyData[] bodyData)
@@ -38,7 +38,7 @@ internal static class BodyTableWriter
         AppendExploration(builder, bodyData.Mapped, bodyData.BodyType);
         AppendExploration(builder, bodyData.Landed, bodyData.BodyType);
         builder.Append(bodyData.GetScanValue().ToString().PadRight(15));
-        builder.Append(bodyData.GetBioValue().ToString().PadLeft(15));
+        AppendBioValue(builder, bodyData);
 
         return builder.ToString();
     }
@@ -177,15 +177,47 @@ internal static class BodyTableWriter
         builder.Append(ANSI_Colors.Reset);
     }
 
+    private static void AppendBioValue(StringBuilder builder, BodyData bodyData)
+    {
+        var (uncertainty, uncertaintyValue, guaranteedValue) = bodyData.GetBioValue();
+
+        var uncertaintyText = uncertainty == 0 ? "" : "+";
+
+        builder.Append((uncertaintyValue + guaranteedValue) + uncertaintyText);
+    }
+
     private static void AppendBodyValues(StringBuilder builder, BodyData[] bodyData)
     {
-        var scanValue = $"{bodyData.Sum(b => b.GetScanValue()) / 1000000.0d:N2}M";
-        var bioValue = $"{bodyData.Sum(b => b.GetBioValue()) / 1000000.0d:N2}M";
-        var totalValue = $"{bodyData.Sum(b => b.GetScanValue() + b.GetBioValue()) / 1000000.0d:N2}M";
+        var (hasUncertainty, scanValue, bioValue, totalValue) = GetBodyValues(bodyData);
+
+        var scanValueText = $"{scanValue / 1000000.0d:N2}M";
+        var bioValueText = $"{bioValue / 1000000.0d:N2}M";
+        var totalValueText = $"{totalValue / 1000000.0d:N2}M";
+
+        var uncertaintyText = hasUncertainty ? "" : "+";
 
         builder.AppendLine($"    Total Scan Value:{scanValue,9}");
-        builder.AppendLine($"    Total Bio Value: {bioValue,9}");
-        builder.AppendLine($"    Total Value:     {totalValue,9}");
+        builder.AppendLine($"    Total Bio Value: {bioValue,9}{uncertaintyText}");
+        builder.AppendLine($"    Total Value:     {totalValue,9}{uncertaintyText}");
         builder.AppendLine(Helper.BAR);
+    }
+
+    private static (bool hasUncertainty, long scanValue, long bioValue, long totalValue) GetBodyValues(BodyData[] bodyData)
+    {
+        if (bodyData.Length < 2)
+            return (false, 0, 0, 0);
+
+        var (uncertainty, uncertaintyValue, guaranteedValue) = bodyData
+            .Select(b => b.GetBioValue())
+            .Aggregate((a, b) => (
+                a.uncertainty + b.uncertainty,
+                a.uncertaintyValue + b.uncertaintyValue,
+                a.guaranteedValue + b.guaranteedValue));
+
+        var scanValue = bodyData.Sum(b => b.GetScanValue());
+        var bioValue = uncertaintyValue + guaranteedValue;
+        var totalValue = scanValue + bioValue;
+
+        return (uncertainty > 0, scanValue, bioValue, totalValue);
     }
 }
