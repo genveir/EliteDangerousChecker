@@ -17,6 +17,12 @@ internal sealed class FilesChangedHandler : IDisposable
     {
         if (changedFiles == null) return;
 
+        Console.WriteLine($"handling update for {changedFiles.Length} changed files");
+        foreach (var file in changedFiles)
+        {
+            Console.WriteLine($"changed file: {file}");
+        }
+
         changedFiles = changedFiles.Where(f => f != null).ToArray();
 
         var marketFileChanged = changedFiles.Any(f => f.EndsWith("Market.json", StringComparison.OrdinalIgnoreCase));

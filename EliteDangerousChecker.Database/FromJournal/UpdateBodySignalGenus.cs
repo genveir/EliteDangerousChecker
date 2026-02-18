@@ -7,6 +7,8 @@ public static class UpdateBodySignalGenus
 {
     public static async Task Execute(long systemAddress, long bodyId, string? bodyName, GenusWithLocalization[] genuses)
     {
+        Console.WriteLine($"Updating signal genuses for body {bodyId} in system {systemAddress}.");
+
         await EnsureBodyExists.Execute(systemAddress, bodyId, bodyName);
 
         using var connection = DbAccess.GetOpenConnection();

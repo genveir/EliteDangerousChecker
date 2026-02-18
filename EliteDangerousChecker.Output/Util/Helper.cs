@@ -13,7 +13,7 @@ internal static class Helper
 
     public const string BAR = "###############################################################################################################";
 
-    public static string ClearTerminal() => "\u001b[2J";
+    public static string ClearTerminal() => "\u001b[2J" + SetCursorPosition(1, 1);
 
     public static string SetCursorPosition(int left, int top) => $"\u001b[{top};{left}H";
 }

@@ -26,15 +26,19 @@ public class SystemWriter
 
     public async Task UpdateBody(BodyData updatedBody)
     {
+        Console.WriteLine($"updating body {updatedBody.BodyId}");
+
         var bodyIndex = bodyData.FindIndex(b => b.BodyId == updatedBody.BodyId);
 
         bool wasKnown = bodyIndex != -1;
         if (bodyIndex == -1)
         {
+            Console.WriteLine("adding new body");
             bodyData.Add(updatedBody);
         }
         else
         {
+            Console.WriteLine("updating existing body");
             bodyData[bodyIndex] = updatedBody;
         }
 
@@ -42,12 +46,16 @@ public class SystemWriter
 
         if (Helper.IsNotable(updatedBody))
         {
+            Console.WriteLine("notable body, writing system");
             await WriteSystem();
         }
         else if (!wasKnown)
         {
+            Console.WriteLine("new body is not notable, but it is a new discovery, updating body count");
             await UpdateBodyCount();
         }
+
+        bodyData = bodyData.OrderBy(b => b.Name).ToList();
     }
 
     public async Task UpdateNavRoute(NavData[] updatedNavData)
@@ -61,7 +69,7 @@ public class SystemWriter
     {
         this.totalBodies = totalBodies;
 
-        await WriteSystem();
+        await UpdateBodyCount();
     }
 
     public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, int? totalBodies, string solarSystemName, BodyData[] bodyData, NavData[] navData)
@@ -70,7 +78,7 @@ public class SystemWriter
         this.currentBodyId = currentBodyId;
         this.totalBodies = totalBodies;
         this.solarSystemName = solarSystemName;
-        this.bodyData = [.. bodyData];
+        this.bodyData = bodyData.OrderBy(b => b.Name).ToList();
         this.navData = navData;
 
         await WriteSystem();
@@ -78,13 +86,17 @@ public class SystemWriter
 
     private async Task UpdateBodyCount()
     {
-        var updateString = SystemInfoWriter.FormatBodyUpdate(1, totalBodies, KnownBodies);
+        Console.WriteLine("updating body count in system header");
+
+        var updateString = SystemInfoWriter.FormatBodyUpdate(2, totalBodies, KnownBodies);
         await terminal.SendOutputLine(updateString);
         await terminal.UpdateView();
     }
 
     private async Task WriteSystem()
     {
+        Console.WriteLine("writing system");
+
         await terminal.SendOutputLine(Helper.ClearTerminal());
 
         var systemHeader = SystemInfoWriter.FormatSystemHeader(solarSystemName, currentSolarSystemId, totalBodies, KnownBodies, navData);

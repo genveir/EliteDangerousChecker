@@ -6,6 +6,8 @@ public static class UpdateBodySignalType
 {
     public static async Task Execute(long systemAddress, long bodyId, string? bodyName, int signalCount)
     {
+        Console.WriteLine($"Updating signal type for body {bodyId} in system {systemAddress} with count {signalCount}.");
+
         await EnsureBodyExists.Execute(systemAddress, bodyId, bodyName);
 
         using var connection = DbAccess.GetOpenConnection();

@@ -13,6 +13,8 @@ internal sealed class JournalUpdater : IDisposable
     private readonly ISystemChangeTracker tracker;
     private readonly string fileName;
 
+    private bool startup = true;
+
     public JournalUpdater(ISystemChangeTracker tracker, string fileName)
     {
         reader = new StreamReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
@@ -24,6 +26,7 @@ internal sealed class JournalUpdater : IDisposable
     {
         var lastUpdate = await GetLastUpdateTime();
 
+        DateTime entryTime = DateTime.MinValue;
         try
         {
             while (!reader.EndOfStream)
@@ -35,13 +38,17 @@ internal sealed class JournalUpdater : IDisposable
                 }
 
                 var timestampPart = line.Substring(15, 19);
-                var entryTime = DateTime.Parse(timestampPart);
-                if (entryTime <= lastUpdate)
+                entryTime = DateTime.Parse(timestampPart);
+                if (entryTime <= lastUpdate && startup)
                 {
                     continue;
                 }
+                startup = false;
+            }
 
-                await HandleLine(tracker, entryTime, line);
+            if (entryTime > lastUpdate)
+            {
+                await UpdateLastUpdateTime(entryTime);
             }
         }
         catch (Exception ex)
@@ -50,13 +57,14 @@ internal sealed class JournalUpdater : IDisposable
         }
     }
 
-    internal static async Task HandleLine(ISystemChangeTracker tracker, DateTime entryTime, string line)
+    internal static async Task HandleLine(ISystemChangeTracker tracker, string line)
     {
         var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var eventType = splitLine[6];
 
-        bool lineWasHandled = true;
+        Console.WriteLine($"Processing event type {eventType}");
+
         switch (eventType)
         {
             case "MarketSell":
@@ -90,13 +98,7 @@ internal sealed class JournalUpdater : IDisposable
                 await FSSDiscoveryScan.HandleFSSDiscoveryScan(tracker, line);
                 break;
             default:
-                lineWasHandled = false;
                 break;
-        }
-
-        if (lineWasHandled)
-        {
-            await UpdateLastUpdateTime(entryTime);
         }
     }
 

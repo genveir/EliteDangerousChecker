@@ -9,7 +9,8 @@ internal sealed class JournalFolderWatcher : IDisposable, IJournalFolderWatcher
     private readonly FileSystemWatcher watcher;
     private readonly FilesChangedHandler filesChangedHandler;
 
-    private readonly List<string> ChangedFiles = [];
+    private readonly List<string>[] ChangedFiles = [[], []];
+    private int WriteIndex = 0;
 
     private const int Delay = 100;
 
@@ -36,10 +37,11 @@ internal sealed class JournalFolderWatcher : IDisposable, IJournalFolderWatcher
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (ChangedFiles.Count > 0)
+                if (ChangedFiles[WriteIndex].Count > 0)
                 {
-                    await PerformCallback(ChangedFiles.ToArray());
-                    ChangedFiles.Clear();
+                    WriteIndex = 1 - WriteIndex;
+                    await PerformCallback(ChangedFiles[1 - WriteIndex].ToArray());
+                    ChangedFiles[1 - WriteIndex].Clear();
                 }
 
                 await Task.Delay(Delay, cancellationToken);
@@ -71,7 +73,17 @@ internal sealed class JournalFolderWatcher : IDisposable, IJournalFolderWatcher
 
     private void OnChange(object sender, FileSystemEventArgs e)
     {
-        ChangedFiles.Add(e.FullPath);
+        if (e.FullPath.EndsWith("Status.json"))
+            return;
+
+        Console.WriteLine($"change in {e.FullPath}");
+
+        if (ChangedFiles[WriteIndex].Contains(e.FullPath))
+        {
+            return;
+        }
+
+        ChangedFiles[WriteIndex].Add(e.FullPath);
     }
 
     public void Dispose()

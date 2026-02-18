@@ -35,11 +35,10 @@ public class FullScanHandler
                 }
                 var splitLine = line.Split([',', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 var eventType = splitLine[6];
-                var entryTime = DateTime.Parse(line.Substring(15, 19));
 
                 if (eventTypes.Contains(eventType))
                 {
-                    await JournalUpdater.HandleLine(tracker, entryTime, line);
+                    await JournalUpdater.HandleLine(tracker, line);
                 }
             }
 

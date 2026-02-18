@@ -113,6 +113,14 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                     continue;
                 }
 
+                if (bodiesToUpdate.Length > 0)
+                {
+                    foreach (var bodyToUpdate in bodiesToUpdate)
+                    {
+                        await UpdateBody(bodyToUpdate);
+                    }
+                }
+
                 if (hasNavRouteChanges)
                 {
                     await UpdateNavRoute(navRoute);
@@ -121,14 +129,6 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 if (HasTotalBodyChanges)
                 {
                     await UpdateTotalBodies(solarSystemNameAndBodyCount.BodyCount);
-                }
-
-                if (bodiesToUpdate.Length > 0)
-                {
-                    foreach (var bodyToUpdate in bodiesToUpdate)
-                    {
-                        await UpdateBody(bodyToUpdate);
-                    }
                 }
             }
             await Task.Delay(1000);

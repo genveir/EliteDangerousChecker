@@ -23,7 +23,7 @@ internal static class SystemInfoWriter
     public static string FormatBodyUpdate(int systemHeaderStartRow, int? totalBodies, int knownBodies)
     {
         var builder = new StringBuilder();
-        builder.Append(Helper.SetCursorPosition(41, systemHeaderStartRow));
+        builder.Append(Helper.SetCursorPosition(54, systemHeaderStartRow));
         AppendBodyCount(builder, totalBodies, knownBodies);
         return builder.ToString();
     }

@@ -6,6 +6,8 @@ public static class UpdateSpeciesFromOrganicSale
 {
     public static async Task Execute(string species, int Value, int Bonus)
     {
+        Console.WriteLine($"Updating species {species} with value {Value} and bonus {Bonus}.");
+
         using var connection = DbAccess.GetOpenConnection();
 
         var speciesId = await SpeciesAccess.GetId(species);
