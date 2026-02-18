@@ -1,4 +1,6 @@
-﻿namespace EliteDangerousChecker.JournalFile.JournalUpdate.Market;
+﻿using EliteDangerousChecker.Database.FromJournal;
+
+namespace EliteDangerousChecker.JournalFile.JournalUpdate.Market;
 internal static class SellOrganicData
 {
     public static async Task HandleSellOrganicData(string journalLine)
@@ -29,10 +31,12 @@ internal static class SellOrganicData
                 continue;
             }
 
-            await Database.FromJournal.UpdateSpeciesFromOrganicSale.Execute(
+            await UpdateSpeciesFromOrganicSale.Execute(
                 species: bioData.Species,
                 Value: bioData.Value,
                 Bonus: bioData.Bonus);
         }
+
+        await ChangeTrip.Execute(parsed.MarketID);
     }
 }

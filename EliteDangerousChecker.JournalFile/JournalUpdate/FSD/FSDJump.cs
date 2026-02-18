@@ -40,6 +40,8 @@ internal static class FSDJump
             await InsertSystemOnJump.Execute(parsed.SystemAddress.Value, x, y, z, parsed.StarSystem);
         }
 
+        await AddToTrip.Execute(parsed.SystemAddress.Value);
+
         tracker.MarkSystemChange(parsed.SystemAddress.Value);
     }
 }

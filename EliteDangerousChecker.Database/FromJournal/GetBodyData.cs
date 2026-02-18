@@ -28,7 +28,8 @@ select
 	bt.Name BodyType,
 	bst.Name SubType,
 	isnull(sig.Number, 0) BioSignals,
-	b.Mainstar
+	b.Mainstar,
+	bsv.ScanValue
 from
 	Body b
 	left join ExplorationStatus esD on esD.Id = b.Discovered
@@ -38,6 +39,7 @@ from
 	left join BodyType bt on bt.Id = b.BodyTypeId
 	left join BodySubType bst on bst.Id = b.BodySubTypeId
 	left join signals sig on sig.BodyId = b.BodyId
+	cross apply BodyScanValue(b.SolarSystemId, b.BodyId) bsv
 where
 	b.SolarSystemId = @solarSystemId";
 
@@ -81,7 +83,8 @@ select
 	bt.Name BodyType,
 	bst.Name SubType,
 	isnull(sig.Number, 0) BioSignals,
-	b.Mainstar
+	b.Mainstar,
+	bsv.ScanValue
 from
 	Body b
 	left join ExplorationStatus esD on esD.Id = b.Discovered
@@ -91,6 +94,7 @@ from
 	left join BodyType bt on bt.Id = b.BodyTypeId
 	left join BodySubType bst on bst.Id = b.BodySubTypeId
 	left join signals sig on 1 = 1
+	cross apply BodyScanValue(b.SolarSystemId, b.BodyId) bsv
 where
 	b.SolarSystemId = @solarSystemId
 	and b.BodyId = @bodyId;";

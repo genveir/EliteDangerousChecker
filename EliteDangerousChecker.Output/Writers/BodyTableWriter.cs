@@ -10,7 +10,7 @@ internal static class BodyTableWriter
         return $"{"Body Name",-30}{"Terraform",-15}{"PC",-10}{"Bio",-8}{"Disc",-5}{"Map",-5}{"Foot",-5}{"ScanValue",-15}{"BioValue",-15}";
     }
 
-    public static string FormatBodyTable(string solarSystemName, BodyData[] bodyData)
+    public static string FormatBodyTable(string solarSystemName, BodyData[] bodyData, ScanValues tripScanValues)
     {
         StringBuilder builder = new();
         builder.AppendLine(GetHeader());
@@ -22,7 +22,7 @@ internal static class BodyTableWriter
                 builder.AppendLine(FormatBodyForTable(solarSystemName, body));
             }
         }
-        AppendBodyValues(builder, bodyData);
+        AppendBodyValues(builder, bodyData, tripScanValues);
         return builder.ToString();
     }
 
@@ -37,7 +37,7 @@ internal static class BodyTableWriter
         AppendExploration(builder, bodyData.Discovered);
         AppendExploration(builder, bodyData.Mapped, bodyData.BodyType);
         AppendExploration(builder, bodyData.Landed, bodyData.BodyType);
-        builder.Append(bodyData.GetScanValue().ToString().PadRight(15));
+        builder.Append(bodyData.ScanValue.ToString().PadRight(15));
         AppendBioValue(builder, bodyData);
 
         return builder.ToString();
@@ -186,7 +186,7 @@ internal static class BodyTableWriter
         builder.Append((uncertaintyValue + guaranteedValue) + uncertaintyText);
     }
 
-    private static void AppendBodyValues(StringBuilder builder, BodyData[] bodyData)
+    private static void AppendBodyValues(StringBuilder builder, BodyData[] bodyData, ScanValues tripScanValues)
     {
         var (hasUncertainty, scanValue, bioValue, totalValue) = GetBodyValues(bodyData);
 
@@ -194,11 +194,21 @@ internal static class BodyTableWriter
         var bioValueText = $"{bioValue / 1000000.0d:N2}M";
         var totalValueText = $"{totalValue / 1000000.0d:N2}M";
 
-        var uncertaintyText = hasUncertainty ? "" : "+";
+        var tripScanValueText = $"{tripScanValues.ScanValue / 1000000.0d:N2}M";
+        var tripBioValueText = $"{tripScanValues.BioValue / 1000000.0d:N2}M";
+        var tripTotalValueText = $"{(tripScanValues.ScanValue + tripScanValues.BioValue) / 1000000.0d:N2}M";
 
-        builder.AppendLine($"    Total Scan Value:{scanValue,9}");
-        builder.AppendLine($"    Total Bio Value: {bioValue,9}{uncertaintyText}");
-        builder.AppendLine($"    Total Value:     {totalValue,9}{uncertaintyText}");
+        var uncertaintyText = hasUncertainty ? "+" : " ";
+
+        builder.Append($"    Total Scan Value:{scanValueText,9} ".PadRight(80));
+        builder.AppendLine($"Trip Scan Value: {tripScanValueText,10}");
+
+        builder.Append($"    Total Bio Value: {bioValueText,9}{uncertaintyText}".PadRight(80));
+        builder.AppendLine($"Trip Bio Value:  {tripBioValueText,10}{uncertaintyText}");
+
+        builder.Append($"    Total Value:     {totalValueText,9}{uncertaintyText}".PadRight(80));
+        builder.AppendLine($"Trip Total Value:{tripTotalValueText,10}{uncertaintyText}");
+
         builder.AppendLine(Helper.BAR);
     }
 
@@ -214,7 +224,7 @@ internal static class BodyTableWriter
                 a.uncertaintyValue + b.uncertaintyValue,
                 a.guaranteedValue + b.guaranteedValue));
 
-        var scanValue = bodyData.Sum(b => b.GetScanValue());
+        var scanValue = bodyData.Sum(b => b.ScanValue);
         var bioValue = uncertaintyValue + guaranteedValue;
         var totalValue = scanValue + bioValue;
 

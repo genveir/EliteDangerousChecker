@@ -10,6 +10,7 @@ public class SystemWriter
     private string solarSystemName = "";
     private List<BodyData> bodyData = [];
     private NavData[] navData = [];
+    private ScanValues tripScanValues = new(0, 0, 0);
 
     private int KnownBodies => bodyData
         .Where(bd => bd.BodyType == "Planet" || bd.BodyType == "Star")
@@ -35,9 +36,29 @@ public class SystemWriter
         {
             Console.WriteLine("adding new body");
             bodyData.Add(updatedBody);
+
+            var (uncertainty, uncertaintyValue, guaranteedValue) = updatedBody.GetBioValue();
+
+            tripScanValues = new ScanValues(
+                tripScanValues.ScanValue + updatedBody.ScanValue,
+                tripScanValues.Uncertainty + uncertainty,
+                tripScanValues.BioValue + uncertaintyValue + guaranteedValue);
         }
         else
         {
+            var scanDiff = updatedBody.ScanValue - bodyData[bodyIndex].ScanValue;
+            var (oldUncertainty, oldUncertaintyValue, oldGuaranteedValue) = bodyData[bodyIndex].GetBioValue();
+            var (newUncertainty, newUncertaintyValue, newGuaranteedValue) = updatedBody.GetBioValue();
+            var (uncertaintyDiff, uncertaintyValueDiff, guaranteedValueDiff) = (
+                newUncertainty - oldUncertainty,
+                newUncertaintyValue - oldUncertaintyValue,
+                newGuaranteedValue - oldGuaranteedValue);
+
+            tripScanValues = new ScanValues(
+                tripScanValues.ScanValue + scanDiff,
+                tripScanValues.Uncertainty + uncertaintyDiff,
+                tripScanValues.BioValue + uncertaintyValueDiff + guaranteedValueDiff);
+
             Console.WriteLine("updating existing body");
             bodyData[bodyIndex] = updatedBody;
         }
@@ -72,7 +93,7 @@ public class SystemWriter
         await UpdateBodyCount();
     }
 
-    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, int? totalBodies, string solarSystemName, BodyData[] bodyData, NavData[] navData)
+    public async Task WriteSystem(long currentSolarSystemId, int currentBodyId, int? totalBodies, string solarSystemName, BodyData[] bodyData, NavData[] navData, ScanValues tripScanValues)
     {
         this.currentSolarSystemId = currentSolarSystemId;
         this.currentBodyId = currentBodyId;
@@ -80,6 +101,7 @@ public class SystemWriter
         this.solarSystemName = solarSystemName;
         this.bodyData = bodyData.OrderBy(b => b.Name).ToList();
         this.navData = navData;
+        this.tripScanValues = tripScanValues;
 
         await WriteSystem();
     }
@@ -102,7 +124,7 @@ public class SystemWriter
         var systemHeader = SystemInfoWriter.FormatSystemHeader(solarSystemName, currentSolarSystemId, totalBodies, KnownBodies, navData);
         await terminal.SendOutputLine(systemHeader);
 
-        var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, [.. bodyData]);
+        var bodyTable = BodyTableWriter.FormatBodyTable(solarSystemName, [.. bodyData], tripScanValues);
         await terminal.SendOutputLine(bodyTable);
         await terminal.SendOutputLine("");
 

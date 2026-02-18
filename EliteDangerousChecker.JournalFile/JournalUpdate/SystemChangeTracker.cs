@@ -142,6 +142,7 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
         Console.WriteLine("updating whole system");
 
         var systemData = await GetBodyData.Execute(CurrentSystemAddress);
+        var tripScanValues = await GetTripScanValues.ExecuteForActiveTrip();
         var mappedBodies = systemData.Select(sd => new BodyData(sd)).ToArray();
 
         await systemWriter.WriteSystem(
@@ -150,7 +151,8 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
             totalBodies: bodyCount,
             solarSystemName: systemName,
             bodyData: mappedBodies,
-            navData: navRoute);
+            navData: navRoute,
+            tripScanValues: new(tripScanValues));
     }
 
     private async Task UpdateNavRoute(NavData[] navRoute)

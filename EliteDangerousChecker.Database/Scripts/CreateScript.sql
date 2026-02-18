@@ -279,6 +279,12 @@ create table RockyRingCommodities (
 	AverageSellPrice int not null
 );
 
+-- insert into RockyRingCommodities (CommodityId, AverageSellPrice)
+-- select
+--     Id, 100000
+-- from
+-- 	   Commodity where name in ('Alexandrite', 'Benitoite', 'Monazite', 'Musgravite', 'Serendibite')
+
 create table CommoditiesSold (
 	Timestamp bigint not null,
 	StationId bigint not null,
@@ -344,6 +350,61 @@ create table SolarSystemDistances
 
 alter table SolarSystemDistances add constraint PK_SolarSystemDistances primary key (LowerSolarSystemId, HigherSolarSystemId);
 alter table SolarSystemDistances add constraint CK_ColarSystemDistances_Order check (LowerSolarSystemId <= HigherSolarSystemId);
+
+create table Trip (
+	Id bigint not null primary key identity(1,1),
+	StartSystemId bigint not null,
+	EndSystemId bigint);
+
+create table TripSystem (
+	Id bigint not null primary key identity(1,1),
+	TripId bigint not null,
+	Sequence int not null,
+	SolarSystemId bigint not null);
+
+create table ScanValues (
+	BodySubTypeId bigint not null,
+	Terraformable bit not null,
+	FSS int not null,
+	FSS_FD int not null,
+	FSS_DSS int not null,
+	FSD_FS_DSS int not null);
+
+alter table ScanValues add constraint PK_ScanValues primary key (BodySubTypeId, Terraformable)
+
+-- insert into ScanValues (BodySubTypeId, Terraformable, FSS, FSS_FD, FSS_DSS, FSD_FS_DSS)
+-- select
+--     bst.Id,
+--     sv.Terraformable,
+--     sv.FSS,
+--     sv.FSS_FD,
+--     sv.FSS_DSS,
+--     sv.FSS_FD_DSS
+-- from
+-- (
+--     values
+--         ('Ammonia World', 0, 143463, 373004, 597762, 1724965),
+--         ('Earth-like World', 0, 270290, 702753, 1126206, 3249900),
+--         ('Water World', 0, 99747, 259343, 415613, 1199337),
+--         ('Water World', 1, 268616, 698400, 1119231, 3229773),
+--         ('High Metal Content World', 0, 14070, 36581, 58624, 169171),
+--         ('High Metal Content World', 1, 163948, 426264, 683116, 1971272),
+--         ('Icy Body', 0, 500, 1300, 1569, 4527),
+--         ('Metal-Rich Body', 0, 31632, 82244, 131802, 380341),
+--         ('Rocky Body', 0, 500, 1300, 1476, 4260),
+--         ('Rocky Body', 1, 129504, 336711, 539601, 1557130),
+--         ('Rocky Ice World', 0, 500, 1300, 1752, 5057),
+--         ('Class I Gas Giant', 0, 3845, 9997, 16021, 46233),
+--         ('Class II Gas Giant', 0, 28405, 73853, 118354, 341536),
+--         ('Class III Gas Giant', 0, 995, 2587, 4145, 11963),
+--         ('Class IV Gas Giant', 0, 1119, 2910, 4663, 13457),
+--         ('Class V Gas Giant', 0, 966, 2510, 4023, 11609),
+--         ('Gas Giant with Ammonia-based Life', 0, 774, 2014, 3227, 9312),
+--         ('Gas Giant with Water-based Life', 0, 883, 2295, 3679, 10616),
+--         ('Helium-Rich Gas Giant', 0, 900, 2339, 3749, 10818),
+--         ('Water Giant', 0, 667, 1734, 2779, 8019)
+-- ) as sv(PlanetType, Terraformable, FSS, FSS_FD, FSS_DSS, FSS_FD_DSS)
+-- inner join BodySubType bst on bst.Name = sv.PlanetTyp
 
 -- Foreign Keys
 
@@ -430,7 +491,13 @@ alter table BodySignalGenus add constraint FK_BodySignalGenus_Scanned foreign ke
 alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Lower foreign key (LowerSolarSystemId) references SolarSystem (Id)
 alter table SolarSystemDistances add constraint FK_SolarSystemDistances_Higher foreign key (HigherSolarSystemId) references SolarSystem (Id)
 
+alter table Trip add constraint FK_Trip_StartSystem foreign key (StartSystemId) references SolarSystem (Id);
+alter table Trip add constraint FK_Trip_EndSystem foreign key (EndSystemId) references SolarSystem (Id);
 
+alter table TripSystem add constraint FK_TripSystem_Trip foreign key (TripId) references Trip (Id);
+alter table TripSystem add constraint FK_TripSystem_SolarSystem foreign key (SolarSystemId) references SolarSystem (Id);
+
+alter table ScanValues add constraint FK_ScanValues_BodySubType foreign key (BodySubTypeId) references BodySubType (Id)
 
 -- Indexes
 
@@ -797,6 +864,75 @@ begin
         (select count(*) from RingSignalGenus)
     );
 end
+go
+
+-- Trip functions
+
+create function DistinctTripSystems (@TripId bigint)
+returns table
+as
+return
+(
+	select distinct
+		SolarSystemId
+	from 
+		TripSystem ts
+	where ts.TripId = @TripId
+)
+go
+
+create function BodyScanValue (@SolarSystemId bigint, @BodyId int)
+returns table
+as
+return
+(
+	select
+		isnull(case
+			when b.Discovered <> 3 and b.Mapped = 1 then sv.FSS
+			when b.Discovered <> 3 and b.Mapped = 3 then sv.FSS_DSS
+			when b.Discovered = 3 and b.Mapped = 1 then sv.FSS_FD
+			when b.Discovered = 3 and b.Mapped = 3 then sv.FSD_FS_DSS
+		end, 0) ScanValue
+	from
+		Body b
+		left join ScanValues sv on sv.BodySubTypeId = b.BodySubTypeId and sv.Terraformable =(case when b.TerraformingStateId = 2 then 1 else 0 end)
+	where 
+		b.SolarSystemId = @SolarSystemId
+		and b.BodyId = @BodyId
+)
+go
+
+create function SystemScanValue (@SolarSystemId bigint)
+returns table
+as
+return
+(
+	select
+		sum(bsv.ScanValue) ScanValue
+	from
+		Body b
+		cross apply BodyScanValue(@SolarSystemId, b.BodyId) bsv
+	where 
+		b.SolarSystemId = @SolarSystemId
+)
+go
+
+
+create function SystemBioValue (@SolarSystemId bigint)
+returns table
+as
+return
+(
+	select
+		sum(case when s.Value = 0 then 1 else 0 end) Uncertainty,
+		sum(case when s.Value = 0 then 5000000 else s.Value + s.Bonus end) Value
+	from
+		Body b
+		join BodySignalGenus bsg on bsg.SolarSystemId = b.SolarSystemId and bsg.BodyId = b.BodyId
+		join Species s on s.Id = bsg.SpeciesId
+	where
+		b.SolarSystemId = @SolarSystemId
+)
 go
 
 -- Update tables

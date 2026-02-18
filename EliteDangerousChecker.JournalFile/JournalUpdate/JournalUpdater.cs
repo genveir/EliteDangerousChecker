@@ -44,6 +44,8 @@ internal sealed class JournalUpdater : IDisposable
                     continue;
                 }
                 startup = false;
+
+                await HandleLine(tracker, line);
             }
 
             if (entryTime > lastUpdate)
