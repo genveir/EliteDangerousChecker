@@ -9,7 +9,7 @@ internal static class SystemInfoWriter
     {
         var builder = new StringBuilder();
 
-        builder.Append($"System: {solarSystemName} ({currentSolarSystemId})  ".PadRight(40));
+        builder.Append($"System: {solarSystemName} ({currentSolarSystemId})  ".PadRight(70));
         AppendBodyCount(builder, totalBodies, knownBodies);
         builder.AppendLine();
 
@@ -23,7 +23,7 @@ internal static class SystemInfoWriter
     public static string FormatBodyUpdate(int systemHeaderStartRow, int? totalBodies, int knownBodies)
     {
         var builder = new StringBuilder();
-        builder.Append(Helper.SetCursorPosition(54, systemHeaderStartRow));
+        builder.Append(Helper.SetCursorPosition(84, systemHeaderStartRow));
         AppendBodyCount(builder, totalBodies, knownBodies);
         return builder.ToString();
     }
@@ -81,7 +81,9 @@ internal static class SystemInfoWriter
 
             if (numPrinted > 40)
             {
-                builder.AppendLine("...");
+                var numRemaining = navRoute.Length - n - 1;
+
+                builder.AppendLine($"... {numRemaining} more");
                 break;
             }
         }

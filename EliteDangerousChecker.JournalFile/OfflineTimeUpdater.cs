@@ -1,7 +1,7 @@
 ﻿using EliteDangerousChecker.JournalFile.JournalUpdate;
 
 namespace EliteDangerousChecker.JournalFile;
-public class SystemLogPrinter
+public class OfflineTimeUpdater
 {
     const string JournalFolderPath = @"c:\Users\genve\Saved Games\Frontier Developments\Elite Dangerous";
 
@@ -15,7 +15,7 @@ public class SystemLogPrinter
 
         foreach (var file in journalFiles)
         {
-            var found = await FindJumpAndUpdateTime(file);
+            var found = await UpdateSinceJumpBeforeLastExit(file);
 
             fileStack.Push(file);
 
@@ -33,22 +33,29 @@ public class SystemLogPrinter
         }
     }
 
-    private static async Task<bool> FindJumpAndUpdateTime(string fileName)
+    private static async Task<bool> UpdateSinceJumpBeforeLastExit(string fileName)
     {
         var reader = new StreamReader(new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+
+        var lastUpdate = await JournalUpdater.GetLastUpdateTime();
 
         var lines = (await reader.ReadToEndAsync()).Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         for (int i = lines.Length - 1; i >= 0; i--)
         {
             var line = lines[i];
 
-            if (line.Contains("FSDJump", StringComparison.OrdinalIgnoreCase))
+            var timestamp = line.Split('"', StringSplitOptions.RemoveEmptyEntries)[3].Replace("Z", "");
+
+            var entryTime = DateTime.Parse(timestamp);
+
+            if (entryTime > lastUpdate)
+                continue;
+
+            if (line.Contains("FSDJump") || line.Contains("CarrierJump") || line.Contains("Location"))
             {
-                var timestamp = line.Split('"', StringSplitOptions.RemoveEmptyEntries)[3].Replace("Z", "");
+                var dateTime = entryTime.AddSeconds(-1);
 
-                var dateTime = DateTime.Parse(timestamp).AddSeconds(-1);
-
-                await JournalUpdater.UpdateLastUpdateTime(dateTime);
+                await JournalUpdater.MoveLastUpdateTimeBackwardsOrKeep(dateTime);
 
                 return true;
             }

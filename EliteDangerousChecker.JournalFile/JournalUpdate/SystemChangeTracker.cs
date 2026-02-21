@@ -81,7 +81,7 @@ internal class SystemChangeTracker : ISystemChangeTracker, ISystemChangeTracking
                 if (systemWriter.IsReadyToWrite())
                 {
                     PrintedInitial = true;
-                    await SystemLogPrinter.PrintLogForCurrentSystem(this);
+                    await OfflineTimeUpdater.PrintLogForCurrentSystem(this);
                 }
             }
 

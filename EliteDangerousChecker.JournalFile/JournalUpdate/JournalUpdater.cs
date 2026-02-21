@@ -75,7 +75,7 @@ internal sealed class JournalUpdater : IDisposable
             case "SellOrganicData":
                 await SellOrganicData.HandleSellOrganicData(line);
                 break;
-            case "FSDJump":
+            case "FSDJump" or "CarrierJump" or "Location":
                 await FSDJump.HandleFSDJump(tracker, line);
                 break;
             case "Scan":
@@ -104,7 +104,7 @@ internal sealed class JournalUpdater : IDisposable
         }
     }
 
-    private static async Task<DateTime> GetLastUpdateTime()
+    public static async Task<DateTime> GetLastUpdateTime()
     {
         if (!File.Exists(LastUpdateTimeFile))
             return DateTime.MinValue;
@@ -123,6 +123,15 @@ internal sealed class JournalUpdater : IDisposable
     {
         var text = newTime.ToString("O");
         await File.WriteAllTextAsync(LastUpdateTimeFile, text);
+    }
+
+    internal static async Task MoveLastUpdateTimeBackwardsOrKeep(DateTime newTime)
+    {
+        var currentLastUpdate = await GetLastUpdateTime();
+        if (newTime < currentLastUpdate)
+        {
+            await UpdateLastUpdateTime(newTime);
+        }
     }
 
     public void Dispose()

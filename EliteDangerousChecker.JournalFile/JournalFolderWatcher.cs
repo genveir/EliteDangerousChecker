@@ -73,7 +73,7 @@ internal sealed class JournalFolderWatcher : IDisposable, IJournalFolderWatcher
 
     private void OnChange(object sender, FileSystemEventArgs e)
     {
-        if (e.FullPath.EndsWith("Status.json"))
+        if (e.FullPath.EndsWith("Status.json") || e.FullPath.EndsWith("lastupdatetime.txt"))
             return;
 
         Console.WriteLine($"change in {e.FullPath}");
